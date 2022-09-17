@@ -10,7 +10,8 @@ from replies import CommandReplies
 
 logging.basicConfig(level=logging.INFO)
 
-bot: Bot = Bot(token=CONFIG.BOT_TOKEN.get_secret_value())
+bot: Bot = Bot(token=CONFIG.BOT_TOKEN.get_secret_value(), parse_mode="HTML")
+
 dp: Dispatcher = Dispatcher()
 
 
