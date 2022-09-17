@@ -1,27 +1,20 @@
 import asyncio
 import logging
-import os
 
 from aiogram import Bot, Dispatcher, types
-from dotenv import find_dotenv, load_dotenv
+from aiogram.filters import Command
 
+from config import CONFIG
 from replies import CommandReplies
 
 
 logging.basicConfig(level=logging.INFO)
 
-load_dotenv(dotenv_path=find_dotenv())
-
-BOT_TOKEN: str | None = os.getenv("BOT_TOKEN")
-
-if not BOT_TOKEN:
-    raise SystemExit("Bot token not provided!")
-
-bot: Bot = Bot(token=BOT_TOKEN)
+bot: Bot = Bot(token=CONFIG.BOT_TOKEN.get_secret_value())
 dp: Dispatcher = Dispatcher()
 
 
-@dp.message(commands=["start"])
+@dp.message(Command(commands=["start"]))
 async def cmd_start(message: types.Message):
     await message.answer(CommandReplies.START)
 
