@@ -20,6 +20,7 @@ mypy = "^0.971"
 safety = "^2.1.1"
 bandit = "^1.7.4"
 pre-commit = "^2.20.0"
+python-dotenv = "^0.21.0"
 
 [tool.black]
 preview = true
