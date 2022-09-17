@@ -1,6 +1,6 @@
 [tool.poetry]
-name = "y"
-version = "y"
+name = "deliverybot"
+version = "0.1.0"
 description = "A telegram bot for ordering food."
 authors = ["Danila Kritsky <danilakritsky@gmail.com>"]
 license = "MIT"
@@ -8,7 +8,31 @@ readme = "README.md"
 
 [tool.poetry.dependencies]
 python = "^3.10"
+pydantic = "^1.10.2"
+aiogram = {version = "^3.0.0b4", allow-prereleases = true}
 
+
+[tool.poetry.group.dev.dependencies]
+black = "^22.8.0"
+isort = "^5.10.1"
+flake8 = "^5.0.4"
+mypy = "^0.971"
+safety = "^2.1.1"
+bandit = "^1.7.4"
+pre-commit = "^2.20.0"
+
+[tool.black]
+preview = true
+line-length = 79
+
+[tool.mypy]
+show_error_codes = true
+allow_redefinition = true
+
+[tool.isort]
+profile = "black"
+line_length = 79
+lines_after_imports = 2
 
 [build-system]
 requires = ["poetry-core"]
