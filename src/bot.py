@@ -5,7 +5,7 @@ from aiogram import Bot, Dispatcher, types
 from aiogram.filters import Command, Text
 
 from config import CONFIG
-from keyboards import get_full_keyboard, get_partial_keyboard
+from keyboards import get_initial_keyboard, get_post_about_keyboard
 from replies import CommandReplies
 
 
@@ -17,17 +17,26 @@ dp: Dispatcher = Dispatcher()
 
 
 @dp.message(Command(commands=["start"]))
-async def cmd_start(message: types.Message):
+async def cmd_start(message: types.Message) -> None:
     await message.answer(CommandReplies.START)
     await message.answer(
-        CommandReplies.ABOUT, reply_markup=get_full_keyboard()
+        CommandReplies.HELP, reply_markup=get_initial_keyboard()
     )
 
 
+@dp.message(Command(commands=["about"]))
 @dp.message(Text(text=["about"]))
-async def cmd_about(message: types.Message):
+async def cmd_about(message: types.Message) -> None:
     await message.answer(
-        CommandReplies.ABOUT, reply_markup=get_partial_keyboard()
+        CommandReplies.ABOUT, reply_markup=get_post_about_keyboard()
+    )
+
+
+@dp.message(Command(commands=["help"]))
+@dp.message(Text(text=["help"]))
+async def cmd_help(message: types.Message) -> None:
+    await message.answer(
+        CommandReplies.HELP, reply_markup=get_initial_keyboard()
     )
 
 
