@@ -8,35 +8,41 @@ from replies import CommandReplies
 
 
 router: Router = Router()
+# NOTE: Routers can only handle specific events
+# to handle every update use dispatcher.update to register middleware
 
 
 @router.message(Command(commands=["start"]))
-async def cmd_start(message: types.Message) -> None:
-    await message.answer(CommandReplies.START)
-    await message.answer(
-        CommandReplies.HELP, reply_markup=get_initial_keyboard()
-    )
+async def cmd_start(message: types.Message) -> types.Message:
+    result: list[types.Message] = [
+        await message.answer(CommandReplies.START),
+        await message.answer(
+            CommandReplies.HELP, reply_markup=get_initial_keyboard()
+        )
+    ]
+    # use return to return the outcoming message (to log it)
+    return result
 
 
 @router.message(Command(commands=["about"]))
 @router.message(Text(text=["about"]))
-async def cmd_about(message: types.Message) -> None:
-    await message.answer(
+async def cmd_about(message: types.Message) -> types.Message:
+    return await message.answer(
         CommandReplies.ABOUT, reply_markup=get_post_about_keyboard()
     )
 
 
 @router.message(Command(commands=["help"]))
 @router.message(Text(text=["help"]))
-async def cmd_help(message: types.Message) -> None:
-    await message.answer(
+async def cmd_help(message: types.Message) -> types.Message:
+    return await message.answer(
         CommandReplies.HELP, reply_markup=get_initial_keyboard()
     )
 
 
 @router.message(Command(commands=["orderstart"]))
 @router.message(Text(text=["order"]))
-async def orderstart(message: types.Message):
+async def orderstart(message: types.Message) -> types.Message:
     builder = InlineKeyboardBuilder()
     builder.row(
         types.InlineKeyboardButton(
@@ -49,14 +55,14 @@ async def orderstart(message: types.Message):
         ),
     )
 
-    await message.answer(
+    return await message.answer(
         "Your cart is empty. Please select your first item:",
         reply_markup=builder.as_markup(),
     )
 
 
 @router.inline_query(F.query == "drinks")
-async def send_random_value(inline_query: types.InlineQuery):
+async def send_random_value(inline_query: types.InlineQuery) -> bool:
     results = [
         types.InlineQueryResultArticle(
             type="article",
@@ -71,4 +77,4 @@ async def send_random_value(inline_query: types.InlineQuery):
     # CallbackQuery must be answered
     # with a call to the asnwerCallbackQuery method
     # https://core.telegram.org/bots/api#callbackquery
-    await inline_query.answer(results, is_personal=True)
+    return await inline_query.answer(results, is_personal=True)

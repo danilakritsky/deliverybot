@@ -5,12 +5,14 @@ from aiogram import Bot, Dispatcher
 
 import router
 from config import CONFIG
+from middlewares import UpdatePrinterOuter
 
 
 async def main():
     logging.basicConfig(level=logging.INFO)
 
     dp: Dispatcher = Dispatcher()
+    dp.update.outer_middleware(UpdatePrinterOuter())
     dp.include_router(router.router)
 
     bot: Bot = Bot(
