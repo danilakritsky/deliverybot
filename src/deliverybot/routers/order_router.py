@@ -21,7 +21,10 @@ async def select_drink(inline_query: types.InlineQuery) -> bool:
     # NOTE: to collect the chosen results enable chosen_inline_result
     # via BotFather
     #  @ https://core.telegram.org/bots/inline#collecting-feedback
-    results = [
+
+    # inline_query.answer expects results to be a list of ResuInlineQueryResult
+
+    results: list[types.InlineQueryResult] = [
         types.InlineQueryResultArticle(
             type="article",
             id=item,
@@ -43,4 +46,5 @@ async def select_drink(inline_query: types.InlineQuery) -> bool:
 async def add_to_cart(
     chosen_inline_result: types.ChosenInlineResult, bot: Bot
 ):
-    return bot.send_message(chosen_inline_result.result_id)
+    # return bot.send_message(chosen_inline_result.result_id)
+    pass

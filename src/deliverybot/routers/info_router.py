@@ -4,7 +4,7 @@ from keyboards.regular import get_initial_keyboard, get_post_about_keyboard
 from replies import CommandReplies
 
 
-storage = {}
+storage: dict = {}
 
 router: Router = Router()
 # NOTE: Routers can only handle specific events
@@ -12,7 +12,7 @@ router: Router = Router()
 
 
 @router.message(Command(commands=["start"]))
-async def cmd_start(message: types.Message) -> types.Message:
+async def cmd_start(message: types.Message) -> list[types.Message]:
     result: list[types.Message] = [
         await message.answer(CommandReplies.START),
         await message.answer(

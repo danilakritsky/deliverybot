@@ -29,6 +29,7 @@ line-length = 79
 [tool.mypy]
 show_error_codes = true
 allow_redefinition = true
+mypy_path = "stubs/deliverybot"
 
 [tool.isort]
 profile = "black"
