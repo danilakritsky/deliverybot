@@ -1,14 +1,20 @@
 from aiogram import Bot, Router, types
-from aiogram.filters import Command, Text
+from aiogram.filters import Text
 from keyboards.inline import get_order_keyboard
 from magic_filter import F
 
 
 router: Router = Router()
 
+menu: dict = {
+    "meals": ["meal 1", "meal 2", "meal 3"],
+    "drinks": ["drink 1", "drink 2", "drink 3"],
+    "desserts": ["dessert 1", "dessert 2", "dessert 3"],
+}
+orders: dict = {}
 
-@router.message(Command(commands=["orderstart"]))
-@router.message(Text(text=["order"]))
+
+@router.callback_query(text="order")
 async def orderstart(message: types.Message) -> types.Message:
     return await message.answer(
         "Your cart is empty. Please select your first item:",
@@ -16,8 +22,9 @@ async def orderstart(message: types.Message) -> types.Message:
     )
 
 
-@router.inline_query(F.query == "drinks")
-async def select_drink(inline_query: types.InlineQuery) -> bool:
+# TODO: dynamic inline query
+@router.inline_query()
+async def menu(inline_query: types.InlineQuery) -> bool:
     # NOTE: to collect the chosen results enable chosen_inline_result
     # via BotFather
     #  @ https://core.telegram.org/bots/inline#collecting-feedback
