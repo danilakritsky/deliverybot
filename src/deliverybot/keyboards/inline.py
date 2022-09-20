@@ -2,6 +2,33 @@ from aiogram import types
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 
+BUTTONS: list[types.InlineKeyboardButton] = [
+    types.InlineKeyboardButton(text="about", callback_data="about"),
+    types.InlineKeyboardButton(text="order", callback_data="order"),
+    types.InlineKeyboardButton(
+        text="order history", callback_data="order history"
+    ),
+    types.InlineKeyboardButton(text="help", callback_data="help"),
+]
+
+
+def get_single_row_keyboard_inline(
+    buttons: list[types.InlineKeyboardButton] = BUTTONS,
+    resize_keyboard: bool = True,
+) -> types.InlineKeyboardMarkup:
+    builder: InlineKeyboardBuilder = InlineKeyboardBuilder()
+    builder.row(*buttons)
+    return builder.as_markup(resize_keyboard=True)
+
+
+def get_initial_keyboard_inline():
+    return get_single_row_keyboard_inline(BUTTONS[:-1])
+
+
+def get_post_about_keyboard_inline():
+    return get_single_row_keyboard_inline(BUTTONS[1:])
+
+
 def get_order_keyboard():
     builder = InlineKeyboardBuilder()
     builder.row(

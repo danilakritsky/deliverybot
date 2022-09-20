@@ -1,10 +1,8 @@
+import keyboards
 from aiogram import Router, types
-from aiogram.filters import Command, Text
-from keyboards.regular import get_initial_keyboard, get_post_about_keyboard
+from aiogram.filters import Command
 from replies import CommandReplies
 
-
-storage: dict = {}
 
 router: Router = Router()
 # NOTE: Routers can only handle specific events
@@ -16,24 +14,30 @@ async def cmd_start(message: types.Message) -> list[types.Message]:
     result: list[types.Message] = [
         await message.answer(CommandReplies.START),
         await message.answer(
-            CommandReplies.HELP, reply_markup=get_initial_keyboard()
+            CommandReplies.HELP,
+            reply_markup=keyboards.inline.get_initial_keyboard_inline(),
         ),
     ]
     # use return to return the outcoming message (to log it)
     return result
 
 
-@router.message(Command(commands=["about"]))
-@router.message(Text(text=["about"]))
-async def cmd_about(message: types.Message) -> types.Message:
-    return await message.answer(
-        CommandReplies.ABOUT, reply_markup=get_post_about_keyboard()
-    )
+@router.callback_query(text="about")
+async def about(callback: types.CallbackQuery) -> types.Message | bool | None:
+    # https://stackoverflow.com/questions/51782177/mypy-item-of-union-has-no-attribute-error
+    if callback.message:
+        return await callback.message.edit_text(
+            CommandReplies.ABOUT,
+            reply_markup=keyboards.inline.get_post_about_keyboard_inline(),
+        )
+    return None
 
 
-@router.message(Command(commands=["help"]))
-@router.message(Text(text=["help"]))
-async def cmd_help(message: types.Message) -> types.Message:
-    return await message.answer(
-        CommandReplies.HELP, reply_markup=get_initial_keyboard()
-    )
+@router.callback_query(text="help")
+async def help(callback: types.CallbackQuery) -> types.Message | bool | None:
+    if callback.message:
+        return await callback.message.edit_text(
+            CommandReplies.HELP,
+            reply_markup=keyboards.inline.get_initial_keyboard_inline(),
+        )
+    return None
