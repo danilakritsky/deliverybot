@@ -49,6 +49,8 @@ class UpdatePrinterOuter(BaseMiddleware):
             If this middleware is registered with a Router
             to handle only a specific subset of events the entire Update
             will be available in data['event_update'].
+            NOTE: All attributes in `data` will be available
+            as handler parameters and, consequently, within its body.
 
         Returns
         -------

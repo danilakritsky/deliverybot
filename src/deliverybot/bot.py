@@ -19,6 +19,7 @@ async def main():
         token=CONFIG.BOT_TOKEN.get_secret_value(), parse_mode="HTML"
     )
 
+    await bot.delete_webhook(drop_pending_updates=True)
     await dp.start_polling(bot)
 
 

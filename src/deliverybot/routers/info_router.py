@@ -1,6 +1,8 @@
 import keyboards
 from aiogram import Router, types
 from aiogram.filters import Command
+from aiogram.fsm.context import FSMContext
+from fsm import FSM
 from replies import CommandReplies
 
 
@@ -10,34 +12,45 @@ router: Router = Router()
 
 
 @router.message(Command(commands=["start"]))
-async def cmd_start(message: types.Message) -> list[types.Message]:
+async def cmd_start(
+    message: types.Message, state: FSMContext
+) -> list[types.Message]:
+    await state.clear()
+    await state.set_state(FSM._1_start_order)
     result: list[types.Message] = [
         await message.answer(CommandReplies.START),
-        await message.answer(
+        incoming_message := await message.answer(
             CommandReplies.HELP,
             reply_markup=keyboards.inline.get_initial_keyboard_inline(),
         ),
     ]
+    await state.update_data(incoming_message=incoming_message)
     # use return to return the outcoming message (to log it)
     return result
 
 
 @router.callback_query(text="about")
-async def about(callback: types.CallbackQuery) -> types.Message | bool | None:
+async def about(
+    callback: types.CallbackQuery, state: FSMContext
+) -> types.Message | bool | None:
+    edited_msg: types.Message | bool | None = None
     # https://stackoverflow.com/questions/51782177/mypy-item-of-union-has-no-attribute-error
     if callback.message:
-        return await callback.message.edit_text(
+        edited_msg = await callback.message.edit_text(
             CommandReplies.ABOUT,
             reply_markup=keyboards.inline.get_post_about_keyboard_inline(),
         )
-    return None
+    await callback.answer()
+    return edited_msg
 
 
 @router.callback_query(text="help")
 async def help(callback: types.CallbackQuery) -> types.Message | bool | None:
+    edited_msg: types.Message | bool | None = None
     if callback.message:
-        return await callback.message.edit_text(
+        edited_msg = await callback.message.edit_text(
             CommandReplies.HELP,
             reply_markup=keyboards.inline.get_initial_keyboard_inline(),
         )
-    return None
+    await callback.answer()
+    return edited_msg

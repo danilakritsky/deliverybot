@@ -1,57 +1,78 @@
-from aiogram import Bot, Router, types
-from aiogram.filters import Text
-from keyboards.inline import get_order_keyboard
-from magic_filter import F
+import logging
+from typing import Any
 
+import keyboards
+from aiogram import Bot, Router, types
+from aiogram.fsm.context import FSMContext
+from fsm import FSM
+from magic_filter import F
+from menu import MENU
+
+
+logging.basicConfig(level=logging.INFO)
 
 router: Router = Router()
 
-menu: dict = {
-    "meals": ["meal 1", "meal 2", "meal 3"],
-    "drinks": ["drink 1", "drink 2", "drink 3"],
-    "desserts": ["dessert 1", "dessert 2", "dessert 3"],
-}
-orders: dict = {}
 
-
-@router.callback_query(text="order")
-async def orderstart(message: types.Message) -> types.Message:
-    return await message.answer(
-        "Your cart is empty. Please select your first item:",
-        reply_markup=get_order_keyboard(),
-    )
-
-
-# TODO: dynamic inline query
-@router.inline_query()
-async def menu(inline_query: types.InlineQuery) -> bool:
+@router.callback_query(state=FSM._1_start_order)
+async def menu(
+    callback: types.CallbackQuery, state: FSMContext
+) -> types.Message | bool | None:
     # NOTE: to collect the chosen results enable chosen_inline_result
     # via BotFather
     #  @ https://core.telegram.org/bots/inline#collecting-feedback
-
     # inline_query.answer expects results to be a list of ResuInlineQueryResult
+    edited_msg: types.Message | bool | None = None
+    if callback.message:
+        edited_msg = await callback.message.edit_text(
+            "Choose a menu subscection",
+            reply_markup=keyboards.inline.get_menu_section_keyboard(),
+        )
+    await callback.answer()
+    return edited_msg
 
+
+@router.inline_query(
+    lambda inline_query: inline_query.query in MENU, state=FSM._1_start_order
+)
+async def select_menu_item(
+    inline_query: types.InlineQuery,
+    state: FSMContext,
+) -> bool:
     results: list[types.InlineQueryResult] = [
         types.InlineQueryResultArticle(
             type="article",
             id=item,
-            title=f"{item}",
+            title=item,
             input_message_content=types.InputTextMessageContent(
-                message_text=f"{item} has been added to the cart",
-                parse_mode="HTML",
+                message_text=f"{item} added to cart", parse_mode="HTML"
             ),
         )
-        for item in ("item 1", "item 2", "item 3")
+        for item in MENU[inline_query.query]
     ]
-    # CallbackQuery must be answered
-    # with a call to the asnwerCallbackQuery method
-    # https://core.telegram.org/bots/api#callbackquery
-    return await inline_query.answer(results, is_personal=True)
+    return await inline_query.answer(results=results, is_personal=True)
+
+
+@router.message(F.via_bot)
+async def chosen_inline_result_message(
+    message: types.Message,
+    bot: Bot,
+    state: FSMContext,
+) -> None:
+    await bot.delete_message(message.chat.id, message.message_id)
 
 
 @router.chosen_inline_result()
-async def add_to_cart(
-    chosen_inline_result: types.ChosenInlineResult, bot: Bot
+async def menu_items(
+    chosen_inline_result: types.ChosenInlineResult,
+    state: FSMContext,
+    bot: Bot,
 ):
-    # return bot.send_message(chosen_inline_result.result_id)
-    pass
+    state_data: dict[str, Any] = await state.get_data()
+    incoming_message: types.Message = state_data["incoming_message"]
+    updated_message: types.Message | bool = await bot.edit_message_text(
+        chat_id=incoming_message.chat.id,
+        message_id=incoming_message.message_id,
+        text=f"You chose {chosen_inline_result.result_id}",
+    )
+    return updated_message
