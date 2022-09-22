@@ -13,6 +13,8 @@ logging.basicConfig(level=logging.INFO)
 
 router: Router = Router()
 
+ORDERS: dict = {}
+
 
 @router.callback_query(state=FSM._1_start_order)
 async def menu(
@@ -73,6 +75,6 @@ async def menu_items(
     updated_message: types.Message | bool = await bot.edit_message_text(
         chat_id=incoming_message.chat.id,
         message_id=incoming_message.message_id,
-        text=f"You chose {chosen_inline_result.result_id}",
+        text=f"{chosen_inline_result.result_id} has bee added to the cart.",
     )
     return updated_message
