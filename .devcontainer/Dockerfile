@@ -23,7 +23,10 @@ RUN apk update \
         ncurses-dev \
         sqlite-dev \
         bzip2-dev \
-        xz-dev
+        xz-dev \
+        # install build-base to install greenlet
+        # https://stackoverflow.com/questions/11912878/gcc-error-gcc-error-trying-to-exec-cc1-execvp-no-such-file-or-directory
+        build-base
     
 # running apk add py3-pip results in broken pip: importlib.metadata.PackageNotFoundError: No package metadata was found for pip 
 # use ensurepip to add pip
