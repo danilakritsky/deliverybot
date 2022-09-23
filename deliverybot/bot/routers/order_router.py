@@ -5,15 +5,19 @@ from aiogram import Bot, Router, types
 from aiogram.fsm.context import FSMContext
 from magic_filter import F
 
-from deliverybot.bot import keyboards, routers
+from deliverybot.config import CONFIG
+from deliverybot.bot import keyboards
 from deliverybot.bot.fsm import FSM
-
+from deliverybot.database.helpers import (
+    get_menu_sections,
+    get_section_items,
+    get_async_session
+)
+from deliverybot.bot.filters import MenuSectionFilter
 
 logging.basicConfig(level=logging.INFO)
 
 router: Router = Router()
-
-ORDERS: dict = {}
 
 
 @router.callback_query(text="menu", state=FSM._1_start_order)
@@ -27,31 +31,39 @@ async def menu(
     edited_msg: types.Message | bool | None = None
     if callback.message:
         edited_msg = await callback.message.edit_text(
-            "Choose a menu subscection",
-            reply_markup=keyboards.inline.get_menu_section_keyboard(),
+            "Choose a menu subsection:",
+            reply_markup=await keyboards.inline.get_menu_section_keyboard(),
         )
     await callback.answer()
     return edited_msg
 
 
 @router.inline_query(
-    lambda inline_query: inline_query.query in MENU, state=FSM._1_start_order
+    MenuSectionFilter(),
+    state=FSM._1_start_order
 )
 async def select_menu_item(
     inline_query: types.InlineQuery,
     state: FSMContext,
 ) -> bool:
-    results: list[types.InlineQueryResult] = [
-        types.InlineQueryResultArticle(
-            type="article",
-            id=item,
-            title=item,
-            input_message_content=types.InputTextMessageContent(
-                message_text=f"{item} added to cart", parse_mode="HTML"
-            ),
-        )
-        for item in MENU[inline_query.query]
-    ]
+    async_session = await get_async_session()
+    async with async_session() as session:
+        results: list[types.InlineQueryResult] = []
+        for menu_item in await get_section_items(inline_query.query, session):
+            item = types.InlineQueryResultArticle(
+                type="article",
+                id=menu_item.id,
+                title=f'{menu_item.name} price: {menu_item.price.price}',
+                description=f'{menu_item.description}',
+                input_message_content=types.InputTextMessageContent(
+                    message_text=f"{menu_item.name} added to cart",
+                    parse_mode="HTML"
+                ),
+                thumb_url=f'{CONFIG.SERVER_URI.get_secret_value()}/photos/{menu_item.photo_id}'
+            )
+            results.append(item)
+            print(item.thumb_url)
+
     return await inline_query.answer(results=results, is_personal=True)
 
 

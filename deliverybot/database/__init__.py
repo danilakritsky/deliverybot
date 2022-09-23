@@ -10,18 +10,9 @@ from sqlalchemy import (
     Integer,
     String,
     Text,
-    create_engine,
 )
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
-from sqlalchemy.future import select
-from sqlalchemy.orm import (
-    Session,
-    declarative_base,
-    registry,
-    relationship,
-    selectinload,
-    sessionmaker,
-)
+from sqlalchemy.orm import registry, relationship, sessionmaker
 
 
 DB_PATH: Path = Path(__file__).parent / "database.db"
@@ -57,13 +48,22 @@ class MenuItem(Base):
     section = Column(String)
     name = Column(String)
     price = Column(Float)
-    photo_id = Column(String)
+    photo_id = Column(String)  # TODO: rename to file
+    description = Column(String)
+    price = relationship("ItemPrice", uselist=False)
 
     def __repr__(self):
         return (
             "<MenuItem"
-            f" section={self.section} name={self.name!r} price={self.price}>"
+            f" section={self.section} name={self.name!r}>"
         )
+
+class ItemPrice(Base):
+    __tablename__ = "item_prices"
+
+    id = Column(Integer, primary_key=True)
+    item_id = Column(Integer, ForeignKey('menu_items.id'))
+    price = Column(Float)
 
 
 class OrderItem(Base):
@@ -103,9 +103,11 @@ async def init_db():
                 [
                     MenuItem(
                         section=section,
-                        name=f"{section[:-1]} {num}",
-                        price=num + 0.99,
-                        photo_id=f"{section[:-1]}_{1:02d}.jpg",
+                        name=(name := f"{section[:-1]} {num:02d}"),
+                        # https://stackoverflow.com/questions/16151729/attributeerror-int-object-has-no-attribute-sa-instance-state
+                        price=ItemPrice(price=num + 0.99),
+                        photo_id=f"{name.replace(' ', '_')}.jpg",
+                        description=f'This is the description of {name}.'
                     )
                     for num in (1, 2, 3)
                     for section in ("meals", "drinks", "desserts")

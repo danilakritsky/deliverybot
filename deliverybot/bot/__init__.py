@@ -1,11 +1,10 @@
-import asyncio
 import logging
 
 from aiogram import Bot, Dispatcher
 
 # https://stackoverflow.com/questions/8899198/module-has-no-attribute
 import deliverybot.bot.routers as routers
-from deliverybot.bot.config import CONFIG
+from deliverybot.config import CONFIG
 from deliverybot.bot.middlewares import UpdatePrinterOuter
 
 
