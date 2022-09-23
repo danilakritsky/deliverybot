@@ -1,9 +1,10 @@
-import keyboards
 from aiogram import Router, types
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
-from fsm import FSM
-from replies import CommandReplies
+
+from deliverybot.bot import keyboards
+from deliverybot.bot.fsm import FSM
+from deliverybot.bot.replies import CommandReplies
 
 
 router: Router = Router()
@@ -21,7 +22,7 @@ async def cmd_start(
         await message.answer(CommandReplies.START),
         incoming_message := await message.answer(
             CommandReplies.HELP,
-            reply_markup=keyboards.inline.get_initial_keyboard_inline(),
+            reply_markup=await keyboards.inline.get_initial_keyboard_inline(),
         ),
     ]
     await state.update_data(incoming_message=incoming_message)
@@ -38,7 +39,9 @@ async def about(
     if callback.message:
         edited_msg = await callback.message.edit_text(
             CommandReplies.ABOUT,
-            reply_markup=keyboards.inline.get_post_about_keyboard_inline(),
+            reply_markup=(
+                await keyboards.inline.get_post_about_keyboard_inline()
+            ),
         )
     await callback.answer()
     return edited_msg
@@ -50,7 +53,9 @@ async def help(callback: types.CallbackQuery) -> types.Message | bool | None:
     if callback.message:
         edited_msg = await callback.message.edit_text(
             CommandReplies.HELP,
-            reply_markup=keyboards.inline.get_initial_keyboard_inline(),
+            reply_markup=(
+                await keyboards.inline.get_initial_keyboard_inline()
+            ),
         )
     await callback.answer()
     return edited_msg

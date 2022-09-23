@@ -21,7 +21,7 @@ repos:
 
       - id: mypy
         name: mypy
-        files: ^src/  # https://github.com/pre-commit/mirrors-mypy/issues/5
+        files: ^deliverybot/  # https://github.com/pre-commit/mirrors-mypy/issues/5
         entry: poetry run mypy .
         pass_filenames: false  # https://github.com/python/mypy/issues/4008
         language: system
@@ -29,7 +29,7 @@ repos:
 
       - id: bandit
         name: bandit
-        files: ^src/  # to ignore assert errors
+        files: ^deliverybot/  # to ignore assert errors
         entry: poetry run bandit .
         language: system
         types: [python]

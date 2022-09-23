@@ -1,6 +1,13 @@
+import asyncio
+
 from aiogram import types
 from aiogram.utils.keyboard import InlineKeyboardBuilder
-from menu import MENU
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
+from sqlalchemy.future import select
+from sqlalchemy.orm import sessionmaker
+
+from deliverybot.database import DB_PATH, MenuItem
+from deliverybot.database.helpers import get_menu_sections
 
 
 BUTTONS: dict[str, types.InlineKeyboardButton] = {
@@ -17,36 +24,35 @@ BUTTONS: dict[str, types.InlineKeyboardButton] = {
     ),
 }
 
-section: str
-MENU_SECTIONS: list[types.InlineKeyboardButton] = [
-    types.InlineKeyboardButton(
-        text=section, switch_inline_query_current_chat=section
-    )
-    for section in MENU
-]
 
-
-def get_single_row_keyboard_inline(*buttons) -> types.InlineKeyboardMarkup:
+async def get_single_row_keyboard_inline(
+    *buttons,
+) -> types.InlineKeyboardMarkup:
     builder: InlineKeyboardBuilder = InlineKeyboardBuilder()
     builder.row(*(BUTTONS[button] for button in buttons))
     return builder.as_markup(resize_keyboard=True)
 
 
-def get_initial_keyboard_inline() -> types.InlineKeyboardMarkup:
+async def get_initial_keyboard_inline() -> types.InlineKeyboardMarkup:
     return get_single_row_keyboard_inline("order", "order history", "about")
 
 
-def get_post_about_keyboard_inline() -> types.InlineKeyboardMarkup:
+async def get_post_about_keyboard_inline() -> types.InlineKeyboardMarkup:
     return get_single_row_keyboard_inline("order", "order history", "help")
 
 
-def get_order_keyboard() -> types.InlineKeyboardMarkup:
+async def get_order_keyboard() -> types.InlineKeyboardMarkup:
     return get_single_row_keyboard_inline("order", "order history", "help")
 
 
-def get_menu_section_keyboard() -> types.InlineKeyboardMarkup:
+async def get_menu_section_keyboard() -> types.InlineKeyboardMarkup:
     builder: InlineKeyboardBuilder = InlineKeyboardBuilder()
-    for button in MENU_SECTIONS + [BUTTONS["cancel"]]:
+    menu_sections: list[str] = await get_menu_sections()
+    for button in menu_sections + [BUTTONS["cancel"]]:
         builder.add(button)
     builder.adjust(3)
     return builder.as_markup(resize_keyboard=True)
+
+
+if __name__ == "__main__":
+    asyncio.run(get_menu_section_keyboard())

@@ -1,10 +1,12 @@
 import asyncio
 import logging
 
-import routers
 from aiogram import Bot, Dispatcher
-from config import CONFIG
-from middlewares import UpdatePrinterOuter
+
+# https://stackoverflow.com/questions/8899198/module-has-no-attribute
+import deliverybot.bot.routers as routers
+from deliverybot.bot.config import CONFIG
+from deliverybot.bot.middlewares import UpdatePrinterOuter
 
 
 async def main():
@@ -21,7 +23,3 @@ async def main():
 
     await bot.delete_webhook(drop_pending_updates=True)
     await dp.start_polling(bot)
-
-
-if __name__ == "__main__":
-    asyncio.run(main())

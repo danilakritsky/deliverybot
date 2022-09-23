@@ -1,21 +1,30 @@
-# import asyncio
-
+import asyncio
 from pathlib import Path
 
 from sqlalchemy import (
+    Boolean,
+    Column,
+    DateTime,
+    Float,
+    ForeignKey,
+    Integer,
+    String,
+    Text,
     create_engine,
-    Boolean, Column, ForeignKey, Integer, String, Float, DateTime, Text
 )
-
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.ext.asyncio import create_async_engine
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.future import select
 from sqlalchemy.orm import (
-    registry, declarative_base, relationship, selectinload, sessionmaker, Session
+    Session,
+    declarative_base,
+    registry,
+    relationship,
+    selectinload,
+    sessionmaker,
 )
 
 
-DB_PATH: Path = Path(__file__).parent / 'database.db'
+DB_PATH: Path = Path(__file__).parent / "database.db"
 
 mapper_registry = registry()
 Base = mapper_registry.generate_base()
@@ -32,11 +41,12 @@ class Order(Base):
     date = Column(DateTime)
     review = Column(Text)
     stars = Column(Integer)
-    items = relationship('OrderItem', back_populates='order')
+    items = relationship("OrderItem", back_populates="order")
 
     def __repr__(self):
         return (
-            f'<Order id={self.id} user_id={self.user_id} chat_id={self.chat_id}>'
+            "<Order"
+            f" id={self.id} user_id={self.user_id} chat_id={self.chat_id}>"
         )
 
 
@@ -50,7 +60,10 @@ class MenuItem(Base):
     photo_id = Column(String)
 
     def __repr__(self):
-        return f'<MenuItem section={self.section} name={self.name!r} price={self.price}>'
+        return (
+            "<MenuItem"
+            f" section={self.section} name={self.name!r} price={self.price}>"
+        )
 
 
 class OrderItem(Base):
@@ -61,11 +74,11 @@ class OrderItem(Base):
     item_id = Column(Integer, ForeignKey("menu_items.id"))
     quantity = Column(Integer)
     # https://docs.sqlalchemy.org/en/14/orm/basic_relationships.html#many-to-one
-    item = relationship('MenuItem')
-    order = relationship('Order', back_populates='items')
+    item = relationship("MenuItem")
+    order = relationship("Order", back_populates="items")
 
     def __repr__(self):
-        return f'<OrderItem order_id={self.order_id} item_id={self.item_id}>'
+        return f"<OrderItem order_id={self.order_id} item_id={self.item_id}>"
 
 
 async def init_db():
@@ -80,33 +93,29 @@ async def init_db():
     async_session = sessionmaker(
         engine, expire_on_commit=False, class_=AsyncSession
     )
-
+    # start session and CLOSE it automitcally upon exit from the context
+    # manager
     async with async_session() as session:
+        # begin a transaction and COMMIT it automatically
+        # if no exceptions were raised
         async with session.begin():
             session.add_all(
                 [
                     MenuItem(
                         section=section,
-                        name=f'{section[:-1]} {num}',
+                        name=f"{section[:-1]} {num}",
                         price=num + 0.99,
-                        photo_id=f'{section[:-1]}_{1:02d}.jpg'
+                        photo_id=f"{section[:-1]}_{1:02d}.jpg",
                     )
-
                     for num in (1, 2, 3)
-                    for section in ('meals', 'drinks', 'desserts')
+                    for section in ("meals", "drinks", "desserts")
                 ]
             )
-            stmt = select(MenuItem)
-            result = await session.execute(stmt)
-            
-            for menu_item in result.scalars():
-                print(menu_item)
-        # sessions must be commited directly
-        # since exiting the context manager simply closes it
-        await session.commit()
 
     # for AsyncEngine created in function scope, close and
     # clean-up pooled connections
     await engine.dispose()
 
-# asyncio.run(init_db())
+
+if __name__ == "__main__":
+    asyncio.run(init_db())

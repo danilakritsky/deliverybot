@@ -3,6 +3,7 @@ from pydantic import BaseSettings, SecretStr
 
 class Config(BaseSettings):
     BOT_TOKEN: SecretStr
+    SERVER_URI: SecretStr
 
     # https://progressstory.com/tech/python/configuration-management-python-pydantic/
     class Config:

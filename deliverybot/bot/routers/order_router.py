@@ -1,12 +1,12 @@
 import logging
 from typing import Any
 
-import keyboards
 from aiogram import Bot, Router, types
 from aiogram.fsm.context import FSMContext
-from fsm import FSM
 from magic_filter import F
-from menu import MENU
+
+from deliverybot.bot import keyboards, routers
+from deliverybot.bot.fsm import FSM
 
 
 logging.basicConfig(level=logging.INFO)
@@ -16,7 +16,7 @@ router: Router = Router()
 ORDERS: dict = {}
 
 
-@router.callback_query(state=FSM._1_start_order)
+@router.callback_query(text="menu", state=FSM._1_start_order)
 async def menu(
     callback: types.CallbackQuery, state: FSMContext
 ) -> types.Message | bool | None:
