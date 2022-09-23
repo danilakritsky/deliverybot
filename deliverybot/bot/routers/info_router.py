@@ -3,7 +3,7 @@ from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 
 from deliverybot.bot import keyboards
-from deliverybot.bot.fsm import FSM
+from deliverybot.bot.fsm.states import OrderState
 from deliverybot.bot.replies import CommandReplies
 
 
@@ -17,7 +17,7 @@ async def cmd_start(
     message: types.Message, state: FSMContext
 ) -> list[types.Message]:
     await state.clear()
-    await state.set_state(FSM._1_start_order)
+    await state.set_state(OrderState.start)
     result: list[types.Message] = [
         await message.answer(CommandReplies.START),
         incoming_message := await message.answer(

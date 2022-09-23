@@ -28,7 +28,7 @@ async def get_section_items(
     section: str,
     session: AsyncSession
 ) -> list[dict]:
-    #async with session:
+    # async with session:
     section_items = (
         await session.execute(
             select(MenuItem)
@@ -39,4 +39,3 @@ async def get_section_items(
     ).scalars().all()
  
     return section_items
-   

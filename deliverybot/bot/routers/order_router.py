@@ -7,9 +7,8 @@ from magic_filter import F
 
 from deliverybot.config import CONFIG
 from deliverybot.bot import keyboards
-from deliverybot.bot.fsm import FSM
+from deliverybot.bot.fsm.states import OrderState
 from deliverybot.database.helpers import (
-    get_menu_sections,
     get_section_items,
     get_async_session
 )
@@ -20,7 +19,7 @@ logging.basicConfig(level=logging.INFO)
 router: Router = Router()
 
 
-@router.callback_query(text="menu", state=FSM._1_start_order)
+@router.callback_query(text="menu", state=OrderState.start)
 async def menu(
     callback: types.CallbackQuery, state: FSMContext
 ) -> types.Message | bool | None:
@@ -40,7 +39,6 @@ async def menu(
 
 @router.inline_query(
     MenuSectionFilter(),
-    state=FSM._1_start_order
 )
 async def select_menu_item(
     inline_query: types.InlineQuery,
@@ -62,7 +60,6 @@ async def select_menu_item(
                 thumb_url=f'{CONFIG.SERVER_URI.get_secret_value()}/photos/{menu_item.photo_id}'
             )
             results.append(item)
-            print(item.thumb_url)
 
     return await inline_query.answer(results=results, is_personal=True)
 

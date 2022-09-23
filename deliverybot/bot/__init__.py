@@ -6,6 +6,7 @@ from aiogram import Bot, Dispatcher
 import deliverybot.bot.routers as routers
 from deliverybot.config import CONFIG
 from deliverybot.bot.middlewares import UpdatePrinterOuter
+from deliverybot.bot.fsm.storage import SQLiteStorage
 
 
 async def main():
@@ -21,4 +22,4 @@ async def main():
     )
 
     await bot.delete_webhook(drop_pending_updates=True)
-    await dp.start_polling(bot)
+    await dp.start_polling(bot, storage=SQLiteStorage())

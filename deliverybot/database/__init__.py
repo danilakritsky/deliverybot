@@ -25,13 +25,13 @@ class Order(Base):
     __tablename__ = "orders"
 
     id = Column(Integer, primary_key=True)
-    user_id = Column(Integer)
+    bot_id = Column(Integer)
     chat_id = Column(Integer)
-    total = Column(Float)
-    confirmed = Column(Boolean)
-    date = Column(DateTime)
+    user_id = Column(Integer)
+    datetime = Column(DateTime)
     review = Column(Text)
     stars = Column(Integer)
+    state = Column(Text)
     items = relationship("OrderItem", back_populates="order")
 
     def __repr__(self):
@@ -57,6 +57,7 @@ class MenuItem(Base):
             "<MenuItem"
             f" section={self.section} name={self.name!r}>"
         )
+
 
 class ItemPrice(Base):
     __tablename__ = "item_prices"
