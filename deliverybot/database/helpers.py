@@ -1,41 +1,73 @@
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
+from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from sqlalchemy.orm import sessionmaker, selectinload
+from sqlalchemy.orm import selectinload
+from sqlalchemy.sql.expression import Select
 
-from deliverybot.database import DB_PATH, MenuItem
-
-
-async def get_async_session() -> AsyncSession:
-    engine = create_async_engine(f"sqlite+aiosqlite:///{DB_PATH}", echo=True)
-    return sessionmaker(engine, expire_on_commit=False, class_=AsyncSession)
+from deliverybot.database import MenuItem, UserState, User, Order
 
 
-async def get_menu_sections() -> list[str]:
-    # start session and CLOSE it automitcally upon exit from the context
-    # manager
-    async_session = await get_async_session()
-    async with async_session() as session:
-        # begin a transaction and COMMIT it automatically
-        # if no exceptions were raised
-        async with session.begin():
-            return (
-                (await session.execute(select(MenuItem.section).distinct()))
-                .scalars()
-                .all()
-            )
+async def run_select_stmt(stmt: Select, session: AsyncSession):
+    results = (await session.execute(stmt)).scalars().all()
+    match len(results):
+        case 0:
+            return None
+        case 1:
+            return results[0]
+        case _:
+            return results
 
-async def get_section_items(
-    section: str,
-    session: AsyncSession
-) -> list[dict]:
-    # async with session:
-    section_items = (
-        await session.execute(
-            select(MenuItem)
-            .where(MenuItem.section == section)
-            # https://stackoverflow.com/questions/70104873/how-to-access-relationships-with-async-sqlalchemy
-            .options(selectinload(MenuItem.price))
+
+async def get_menu_sections(session: AsyncSession) -> list[str]:
+    stmt = select(MenuItem.section).distinct()
+    return (await run_select_stmt(stmt, session))
+
+
+async def get_section_items(section: str, session: AsyncSession) -> list[dict]:
+    stmt = (
+        select(MenuItem).where(MenuItem.section == section)
+        # https://stackoverflow.com/questions/70104873/how-to-access-relationships-with-async-sqlalchemy
+        .options(selectinload(MenuItem.price))
+    )
+    return (await run_select_stmt(stmt, session))
+
+
+async def get_user_state(
+    bot_id: int, chat_id: int, user_id: int, session: AsyncSession
+) -> Order:
+    print(bot_id, chat_id, user_id)
+    stmt = (
+        select(UserState)
+        .options(
+            selectinload(UserState.user), selectinload(UserState.current_order)
         )
-    ).scalars().all()
- 
-    return section_items
+        .where(User.bot_id == bot_id)
+        .where(User.chat_id == chat_id)
+        .where(User.user_id == user_id)
+    )
+    return (await run_select_stmt(stmt, session))
+
+
+async def get_user(
+    bot_id: int, chat_id: int, user_id: int, session: AsyncSession
+) -> Order:
+    stmt = (
+        select(User)
+        .where(User.bot_id == bot_id)
+        .where(User.chat_id == chat_id)
+        .where(User.user_id == user_id)
+    )
+    return (await run_select_stmt(stmt, session))
+
+
+async def get_user_by_id(
+    id: int, session: AsyncSession
+) -> Order:
+    stmt = select(User).where(User.id == id)
+    return (await run_select_stmt(stmt, session))
+
+
+async def get_user_state_by_id(
+    id: int, session: AsyncSession
+) -> Order:
+    stmt = select(UserState).where(UserState.id == id)
+    return (await run_select_stmt(stmt, session))

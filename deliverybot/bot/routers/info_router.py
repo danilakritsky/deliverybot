@@ -25,7 +25,7 @@ async def cmd_start(
             reply_markup=await keyboards.inline.get_initial_keyboard_inline(),
         ),
     ]
-    await state.update_data(incoming_message=incoming_message)
+    await state.update_data(message_id=incoming_message.message_id)
     # use return to return the outcoming message (to log it)
     return result
 

@@ -1,0 +1,1 @@
+poetry run flask --app deliverybot/server/app.py run

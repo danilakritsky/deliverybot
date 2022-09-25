@@ -1,8 +1,4 @@
-import asyncio
-from pathlib import Path
-
 from sqlalchemy import (
-    Boolean,
     Column,
     DateTime,
     Float,
@@ -10,29 +6,77 @@ from sqlalchemy import (
     Integer,
     String,
     Text,
+    UniqueConstraint,
 )
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import registry, relationship, sessionmaker
 
+from deliverybot.config import CONFIG
 
-DB_PATH: Path = Path(__file__).parent / "database.db"
+
+engine = create_async_engine(
+    f"sqlite+aiosqlite:///{CONFIG.DB_PATH}", echo=True
+)
+
+# expire_on_commit=False will prevent attributes from being expired
+# after commit.
+async_session: AsyncSession = sessionmaker(
+    engine, expire_on_commit=False, class_=AsyncSession
+)
 
 mapper_registry = registry()
 Base = mapper_registry.generate_base()
+
+
+class UserState(Base):
+    __tablename__ = "user_states"
+
+    id = Column(Integer, primary_key=True)
+
+    state = Column(Text)
+    message_id = Column(Integer)
+    
+    user_id = Column(Integer, ForeignKey("users.id"))
+    user = relationship("User", uselist=False)
+
+    current_order_id = Column(Integer, ForeignKey("orders.id"))
+    current_order = relationship(
+        "Order",
+        uselist=False,
+        cascade='all, delete-orphan',
+        single_parent=True
+    )
+
+
+class User(Base):
+    __tablename__ = "users"
+    __table_args__ = (UniqueConstraint("bot_id", "chat_id", "user_id"),)
+
+    id = Column(Integer, primary_key=True)
+    bot_id = Column(Integer)
+    chat_id = Column(Integer)
+    user_id = Column(Integer)
+    phone_number = Column(Text)
+
+    orders = relationship("Order", back_populates="user")
 
 
 class Order(Base):
     __tablename__ = "orders"
 
     id = Column(Integer, primary_key=True)
-    bot_id = Column(Integer)
-    chat_id = Column(Integer)
-    user_id = Column(Integer)
+
     datetime = Column(DateTime)
+
+    user_id = Column(Integer, ForeignKey("users.id"))
+    user = relationship("User", back_populates="orders", uselist=False)
+
     review = Column(Text)
     stars = Column(Integer)
-    state = Column(Text)
-    items = relationship("OrderItem", back_populates="order")
+
+    order_total = Column(Float)
+
+    order_lines = relationship("OrderLine", cascade='all, delete-orphan')
 
     def __repr__(self):
         return (
@@ -41,59 +85,50 @@ class Order(Base):
         )
 
 
+class OrderLine(Base):
+    __tablename__ = "order_lines"
+
+    id = Column(Integer, primary_key=True)
+
+    order_id = Column(Integer, ForeignKey("orders.id"))
+
+    item_id = Column(Integer, ForeignKey("menu_items.id"))
+    item = relationship("MenuItem")
+
+    quantity = Column(Integer)
+    total = Column(Float)
+    # https://docs.sqlalchemy.org/en/14/orm/basic_relationships.html#many-to-one
+
+    def __repr__(self):
+        return f"<OrderItem order_id={self.order_id} item_id={self.item_id}>"
+
+
 class MenuItem(Base):
     __tablename__ = "menu_items"
 
     id = Column(Integer, primary_key=True)
     section = Column(String)
     name = Column(String)
-    price = Column(Float)
-    photo_id = Column(String)  # TODO: rename to file
+    photo_filename = Column(String)
     description = Column(String)
     price = relationship("ItemPrice", uselist=False)
 
     def __repr__(self):
-        return (
-            "<MenuItem"
-            f" section={self.section} name={self.name!r}>"
-        )
+        return f"<MenuItem section={self.section} name={self.name!r}>"
 
 
 class ItemPrice(Base):
     __tablename__ = "item_prices"
 
     id = Column(Integer, primary_key=True)
-    item_id = Column(Integer, ForeignKey('menu_items.id'))
+    item_id = Column(Integer, ForeignKey("menu_items.id"))
     price = Column(Float)
 
 
-class OrderItem(Base):
-    __tablename__ = "order_items"
-
-    id = Column(Integer, primary_key=True)
-    order_id = Column(Integer, ForeignKey("orders.id"))
-    item_id = Column(Integer, ForeignKey("menu_items.id"))
-    quantity = Column(Integer)
-    # https://docs.sqlalchemy.org/en/14/orm/basic_relationships.html#many-to-one
-    item = relationship("MenuItem")
-    order = relationship("Order", back_populates="items")
-
-    def __repr__(self):
-        return f"<OrderItem order_id={self.order_id} item_id={self.item_id}>"
-
-
 async def init_db():
-    engine = create_async_engine(f"sqlite+aiosqlite:///{DB_PATH}", echo=True)
-
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.drop_all)
         await conn.run_sync(Base.metadata.create_all)
-
-    # expire_on_commit=False will prevent attributes from being expired
-    # after commit.
-    async_session = sessionmaker(
-        engine, expire_on_commit=False, class_=AsyncSession
-    )
     # start session and CLOSE it automitcally upon exit from the context
     # manager
     async with async_session() as session:
@@ -107,8 +142,8 @@ async def init_db():
                         name=(name := f"{section[:-1]} {num:02d}"),
                         # https://stackoverflow.com/questions/16151729/attributeerror-int-object-has-no-attribute-sa-instance-state
                         price=ItemPrice(price=num + 0.99),
-                        photo_id=f"{name.replace(' ', '_')}.jpg",
-                        description=f'This is the description of {name}.'
+                        photo_filename=f"{name.replace(' ', '_')}.jpg",
+                        description=f"This is the description of {name}.",
                     )
                     for num in (1, 2, 3)
                     for section in ("meals", "drinks", "desserts")
@@ -117,8 +152,4 @@ async def init_db():
 
     # for AsyncEngine created in function scope, close and
     # clean-up pooled connections
-    await engine.dispose()
-
-
-if __name__ == "__main__":
-    asyncio.run(init_db())
+    # await engine.dispose()

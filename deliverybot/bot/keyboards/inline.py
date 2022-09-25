@@ -2,6 +2,7 @@ import asyncio
 
 from aiogram import types
 from aiogram.utils.keyboard import InlineKeyboardBuilder
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from deliverybot.database.helpers import get_menu_sections
 
@@ -47,16 +48,18 @@ async def get_order_keyboard() -> types.InlineKeyboardMarkup:
     )
 
 
-async def get_menu_section_keyboard() -> types.InlineKeyboardMarkup:
+async def get_menu_section_keyboard(
+    session: AsyncSession,
+) -> types.InlineKeyboardMarkup:
     builder: InlineKeyboardBuilder = InlineKeyboardBuilder()
+
     menu_sections: list[types.InlineKeyboardButton] = [
         types.InlineKeyboardButton(
-            text=section,
-            switch_inline_query_current_chat=section
+            text=section, switch_inline_query_current_chat=section
         )
-        for section in await get_menu_sections()
+        for section in await get_menu_sections(session)
     ]
-    
+
     for button in menu_sections + [BUTTONS["cancel"]]:
         builder.add(button)
     builder.adjust(3)

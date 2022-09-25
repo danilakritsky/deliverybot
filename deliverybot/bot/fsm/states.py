@@ -9,4 +9,4 @@ class OrderState(StatesGroup):
 
 
 async def state_to_str(state: State) -> str:
-    return state.state[(state.state.find(':') + 1):]
+    return state.state[(state.state.find(":") + 1):]
