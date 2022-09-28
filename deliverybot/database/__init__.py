@@ -10,6 +10,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import registry, relationship, sessionmaker
+from sqlalchemy.ext.hybrid import hybrid_property, hybrid_method
 
 from deliverybot.config import CONFIG
 
@@ -35,7 +36,7 @@ class UserState(Base):
 
     state = Column(Text)
     message_id = Column(Integer)
-    
+
     user_id = Column(Integer, ForeignKey("users.id"))
     user = relationship("User", uselist=False)
 
@@ -43,8 +44,8 @@ class UserState(Base):
     current_order = relationship(
         "Order",
         uselist=False,
-        cascade='all, delete-orphan',
-        single_parent=True
+        cascade="all, delete-orphan",
+        single_parent=True,
     )
 
 
@@ -76,12 +77,12 @@ class Order(Base):
 
     order_total = Column(Float)
 
-    order_lines = relationship("OrderLine", cascade='all, delete-orphan')
+    order_lines = relationship("OrderLine", cascade="all, delete-orphan")
 
     def __repr__(self):
         return (
             "<Order"
-            f" id={self.id} user_id={self.user_id} chat_id={self.chat_id}>"
+            f" id={self.id} user_id={self.user_id}>"
         )
 
 
@@ -91,13 +92,13 @@ class OrderLine(Base):
     id = Column(Integer, primary_key=True)
 
     order_id = Column(Integer, ForeignKey("orders.id"))
-
+    line_num = Column(Integer)
     item_id = Column(Integer, ForeignKey("menu_items.id"))
     item = relationship("MenuItem")
 
     quantity = Column(Integer)
+    price = Column(Float)
     total = Column(Float)
-    # https://docs.sqlalchemy.org/en/14/orm/basic_relationships.html#many-to-one
 
     def __repr__(self):
         return f"<OrderItem order_id={self.order_id} item_id={self.item_id}>"

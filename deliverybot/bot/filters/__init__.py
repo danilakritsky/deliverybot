@@ -1,8 +1,8 @@
 from aiogram.filters import BaseFilter
 from aiogram.types import InlineQuery
 
-from deliverybot.database.helpers import get_menu_sections
 from deliverybot.database import async_session
+from deliverybot.database.helpers import get_menu_sections
 
 
 class MenuSectionFilter(BaseFilter):

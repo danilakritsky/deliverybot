@@ -17,7 +17,7 @@ async def cmd_start(
     message: types.Message, state: FSMContext
 ) -> list[types.Message]:
     await state.clear()
-    await state.set_state(OrderState.start)
+    await state.set_state(OrderState.not_started)
     result: list[types.Message] = [
         await message.answer(CommandReplies.START),
         incoming_message := await message.answer(

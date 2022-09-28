@@ -13,7 +13,9 @@ from deliverybot.config import CONFIG
 async def main():
     logging.basicConfig(level=logging.INFO)
 
-    dp: Dispatcher = Dispatcher(storage=SQLiteStorage())  # NOTE: storage is set here
+    dp: Dispatcher = Dispatcher(
+        storage=SQLiteStorage()
+    )  # NOTE: storage is set here
     dp.update.outer_middleware(UpdatePrinterOuter())
     dp.include_router(routers.info_router.router)
     dp.include_router(routers.order_router.router)
