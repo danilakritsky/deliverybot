@@ -13,7 +13,7 @@ router: Router = Router()
 
 
 @router.message(Command(commands=["start"]))
-async def cmd_start(
+async def start_cmd_issued(
     message: types.Message, state: FSMContext
 ) -> list[types.Message]:
     await state.clear()
@@ -31,7 +31,7 @@ async def cmd_start(
 
 
 @router.callback_query(text="about")
-async def about(
+async def show_about_info(
     callback: types.CallbackQuery, state: FSMContext
 ) -> types.Message | bool | None:
     edited_msg: types.Message | bool | None = None
@@ -48,7 +48,9 @@ async def about(
 
 
 @router.callback_query(text="help")
-async def help(callback: types.CallbackQuery) -> types.Message | bool | None:
+async def show_help(
+    callback: types.CallbackQuery,
+) -> types.Message | bool | None:
     edited_msg: types.Message | bool | None = None
     if callback.message:
         edited_msg = await callback.message.edit_text(

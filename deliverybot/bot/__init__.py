@@ -19,6 +19,7 @@ async def main():
     dp.update.outer_middleware(UpdatePrinterOuter())
     dp.include_router(routers.info_router.router)
     dp.include_router(routers.order_router.router)
+    dp.include_router(routers.cart_router.router)
 
     bot: Bot = Bot(
         token=CONFIG.BOT_TOKEN.get_secret_value(), parse_mode="HTML"

@@ -69,7 +69,9 @@ async def get_user_state_by_id(id: int, session: AsyncSession) -> Order:
         select(UserState)
         .where(UserState.id == id)
         .options(
-            selectinload(UserState.user), selectinload(UserState.current_order)
+            selectinload(UserState.user),
+            selectinload(UserState.current_order),
+            selectinload(UserState.current_order_line),
         )
     )
     return await run_select_stmt(stmt, session)

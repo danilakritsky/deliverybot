@@ -9,8 +9,8 @@ from sqlalchemy import (
     UniqueConstraint,
 )
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
+from sqlalchemy.ext.hybrid import hybrid_method, hybrid_property
 from sqlalchemy.orm import registry, relationship, sessionmaker
-from sqlalchemy.ext.hybrid import hybrid_property, hybrid_method
 
 from deliverybot.config import CONFIG
 
@@ -50,9 +50,7 @@ class UserState(Base):
 
     current_order_line_id = Column(Integer, ForeignKey("order_lines.id"))
     current_order_line = relationship(
-        "OrderLine",
-        uselist=False,
-        single_parent=True
+        "OrderLine", uselist=False, single_parent=True
     )
 
 
@@ -87,10 +85,7 @@ class Order(Base):
     order_lines = relationship("OrderLine", cascade="all, delete-orphan")
 
     def __repr__(self):
-        return (
-            "<Order"
-            f" id={self.id} user_id={self.user_id}>"
-        )
+        return f"<Order id={self.id} user_id={self.user_id}>"
 
 
 class OrderLine(Base):

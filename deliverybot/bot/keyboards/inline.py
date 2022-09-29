@@ -68,40 +68,37 @@ async def get_menu_section_keyboard(
 
 
 async def get_current_cart_keyboard(
-    user_state: UserState
+    user_state: UserState,
 ) -> types.InlineKeyboardMarkup:
-
     builder: InlineKeyboardBuilder = InlineKeyboardBuilder()
     builder.add(
-        types.InlineKeyboardButton(text="+", callback_data="increase"),
+        types.InlineKeyboardButton(text="-", callback_data="decrease"),
         types.InlineKeyboardButton(
             text=f"{user_state.current_order_line.quantity}",
-            callback_data="item_quantity"
+            callback_data="item_quantity",
         ),
-        types.InlineKeyboardButton(text="-", callback_data="decrease"),
-
-        types.InlineKeyboardButton(text="->", callback_data="next_item"),
+        types.InlineKeyboardButton(text="+", callback_data="increase"),
+        types.InlineKeyboardButton(text="<-", callback_data="previous_item"),
         types.InlineKeyboardButton(
             text=f"{user_state.current_order_line.total}",
-            callback_data="item_total"
+            callback_data="item_total",
         ),
-        types.InlineKeyboardButton(text="<-", callback_data="previous_item"),
-
+        types.InlineKeyboardButton(text="->", callback_data="next_item"),
         types.InlineKeyboardButton(text="x", callback_data="remove"),
-
-        types.InlineKeyboardButton(text=(
-            f"{user_state.current_order_line.line_num}"
-            " / "
-            f"{len(user_state.current_order.order_lines)}"
+        types.InlineKeyboardButton(
+            text=(
+                f"{user_state.current_order_line.line_num}"
+                " / "
+                f"{len(user_state.current_order.order_lines)}"
             ),
-            callback_data="total_quantity"
+            callback_data="total_quantity",
         ),
-        types.InlineKeyboardButton(text=(
-            f"{sum(line.total for line in user_state.current_order.order_lines)}"
+        types.InlineKeyboardButton(
+            text=(
+                f"{sum(line.total for line in user_state.current_order.order_lines)}"
             ),
-            callback_data="total"
+            callback_data="total",
         ),
-
         BUTTONS["order"],
         types.InlineKeyboardButton(
             text="cancel", callback_data="cancel_order"
@@ -112,6 +109,7 @@ async def get_current_cart_keyboard(
     )
     builder.adjust(3, 3, 3, 3)
     return builder.as_markup(resize_keyboard=True)
+
 
 if __name__ == "__main__":
     asyncio.run(get_menu_section_keyboard())
