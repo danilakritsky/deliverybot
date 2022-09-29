@@ -48,6 +48,13 @@ class UserState(Base):
         single_parent=True,
     )
 
+    current_order_line_id = Column(Integer, ForeignKey("order_lines.id"))
+    current_order_line = relationship(
+        "OrderLine",
+        uselist=False,
+        single_parent=True
+    )
+
 
 class User(Base):
     __tablename__ = "users"

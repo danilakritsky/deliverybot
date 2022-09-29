@@ -115,13 +115,17 @@ async def menu_items(
         new_order = await get_order_by_id(order_in_progress.id, session)
         new_order.order_lines.append(new_order_line)
         user_state.current_order = new_order
+        user_state.current_order_line = new_order_line
         await session.commit()
-        
+
         updated_message: types.Message | bool = await bot.edit_message_text(
             chat_id=user_state.user.chat_id,
             message_id=user_state.message_id,
             text=(
-                f"{chosen_inline_result.result_id} has bee added to the cart."
+                f"{chosen_inline_result.result_id} has been added to the cart."
             ),
+            reply_markup=await keyboards.inline.get_current_cart_keyboard(
+                user_state
+            )
         )
     return updated_message
