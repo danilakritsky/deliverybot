@@ -1,2 +1,2 @@
 # deliverybot
-A telegram bot for ordering food.
+A bot that enables restaurants to take meal orders over Telegram.

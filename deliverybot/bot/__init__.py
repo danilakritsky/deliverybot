@@ -18,7 +18,7 @@ async def main():
     )  # NOTE: storage is set here
     dp.update.outer_middleware(UpdatePrinterOuter())
     dp.include_router(routers.info_router.router)
-    dp.include_router(routers.order_router.router)
+    dp.include_router(routers.menu_router.router)
     dp.include_router(routers.cart_router.router)
 
     bot: Bot = Bot(

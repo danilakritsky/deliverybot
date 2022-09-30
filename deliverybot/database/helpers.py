@@ -1,9 +1,16 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from sqlalchemy.orm import selectinload
+from sqlalchemy.orm import selectinload, subqueryload
 from sqlalchemy.sql.expression import Select
 
-from deliverybot.database import MenuItem, Order, User, UserState
+from deliverybot.database import (
+    ItemPrice,
+    MenuItem,
+    Order,
+    OrderLine,
+    User,
+    UserState,
+)
 
 
 async def run_select_stmt(stmt: Select, session: AsyncSession):
@@ -69,9 +76,15 @@ async def get_user_state_by_id(id: int, session: AsyncSession) -> Order:
         select(UserState)
         .where(UserState.id == id)
         .options(
-            selectinload(UserState.user),
-            selectinload(UserState.current_order),
-            selectinload(UserState.current_order_line),
+            subqueryload(UserState.user),
+            selectinload(UserState.current_order).subqueryload(
+                Order.order_lines
+            ),
+        )
+        .options(
+            subqueryload(UserState.current_order_line)
+            .subqueryload(OrderLine.item)
+            .subqueryload(MenuItem.price)
         )
     )
     return await run_select_stmt(stmt, session)

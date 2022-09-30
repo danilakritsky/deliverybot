@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "deliverybot"
 version = "0.1.0"
-description = "A telegram bot for ordering food."
+description = "A bot that enables restaurants to take meal orders over Telegram."
 authors = ["Danila Kritsky <danilakritsky@gmail.com>"]
 license = "MIT"
 readme = "README.md"

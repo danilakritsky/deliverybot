@@ -22,7 +22,11 @@ async def start_cmd_issued(
         await message.answer(CommandReplies.START),
         incoming_message := await message.answer(
             CommandReplies.HELP,
-            reply_markup=await keyboards.inline.get_initial_keyboard_inline(),
+            reply_markup=await keyboards.build_inline_keyboard(
+                await keyboards.get_inline_buttons(
+                    ["order", "order_history", "about"]
+                )
+            ),
         ),
     ]
     await state.update_data(message_id=incoming_message.message_id)
@@ -39,8 +43,10 @@ async def show_about_info(
     if callback.message:
         edited_msg = await callback.message.edit_text(
             CommandReplies.ABOUT,
-            reply_markup=(
-                await keyboards.inline.get_post_about_keyboard_inline()
+            reply_markup=await keyboards.build_inline_keyboard(
+                await keyboards.get_inline_buttons(
+                    ["order", "order_history", "help"]
+                )
             ),
         )
     await callback.answer()
@@ -55,8 +61,10 @@ async def show_help(
     if callback.message:
         edited_msg = await callback.message.edit_text(
             CommandReplies.HELP,
-            reply_markup=(
-                await keyboards.inline.get_initial_keyboard_inline()
+            reply_markup=await keyboards.build_inline_keyboard(
+                await keyboards.get_inline_buttons(
+                    ["order", "order_history", "about"]
+                )
             ),
         )
     await callback.answer()
