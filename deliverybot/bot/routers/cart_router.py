@@ -253,6 +253,7 @@ async def next_item(
                     reply_markup=await keyboards.get_cart_keyboard(user_state),
                 )
             await callback.answer()
+            
 
     return edited_msg if edited_msg else callback.message
 
@@ -281,8 +282,16 @@ async def remove_item(
                         shape=3,
                     ),
                 )
+            # TODO
             else:
-                user_state.current_order_line.line_num
+                del user_state.current_order.order_lines[
+                    user_state.current_order_line.line_num - 1
+                ]
+                await session.commit()
+                user_state = await get_user_state_by_id(data["id"], session)
+                for line in user_state.current_order.order_lines:
+                    line.line_num -= 1
+                user_state.current_order_line = user_state.current_order.order_lines[0]
                 edited_msg = await callback.message.edit_text(
                     text=await make_item_description(
                         user_state.current_order_line.item
