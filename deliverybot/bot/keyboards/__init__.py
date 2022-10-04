@@ -61,43 +61,41 @@ async def get_inline_button(
             return types.InlineKeyboardButton(
                 text="submit", callback_data="submit_order"
             )
-        case "item_quantity":
-            return (
-                types.InlineKeyboardButton(
-                    text=f"{user_state.current_order_line.quantity}",
-                    callback_data="item_quantity",
-                ),
+        case "add_another_item":
+            return types.InlineKeyboardButton(
+                text="add item", callback_data="add_another_item"
             )
-        case "otal_item_count":
+        case "item_quantity":
+            return types.InlineKeyboardButton(
+                text=f"{user_state.current_order_line.quantity}",
+                callback_data="item_quantity",
+            )
+        case "item_total":
             return types.InlineKeyboardButton(
                 text=await format_float(
                     user_state.current_order_line.item.price.price
                     * user_state.current_order_line.quantity
                 ),
-                callback_data="total_item_count",
+                callback_data="item_total",
             )
-        case "total_quantity":
-            return (
-                types.InlineKeyboardButton(
-                    text=(
-                        f"{user_state.current_order_line.line_num}"
-                        " / "
-                        f"{len(user_state.current_order.order_lines)}"
-                    ),
-                    callback_data="total_quantity",
+        case "total_item_count":
+            return types.InlineKeyboardButton(
+                text=(
+                    f"{user_state.current_order_line.line_num}"
+                    " / "
+                    f"{len(user_state.current_order.order_lines)}"
                 ),
+                callback_data="total_quantity",
             )
         case "total":
-            return (
-                types.InlineKeyboardButton(
-                    text=await format_float(
-                        sum(
-                            line.total
-                            for line in user_state.current_order.order_lines
-                        )
-                    ),
-                    callback_data="total",
+            return types.InlineKeyboardButton(
+                text=await format_float(
+                    sum(
+                        line.total
+                        for line in user_state.current_order.order_lines
+                    )
                 ),
+                callback_data="total",
             )
         case _:
             pass
@@ -105,7 +103,7 @@ async def get_inline_button(
 
 async def get_inline_buttons(
     buttons: list[types.InlineKeyboardButton],
-    user_state: UserState,
+    user_state: UserState | None = None,
 ) -> types.InlineKeyboardMarkup:
     return [await get_inline_button(button, user_state) for button in buttons]
 
@@ -115,9 +113,13 @@ async def build_inline_keyboard(
     shape: tuple[int] | int | None = None,
 ) -> types.InlineKeyboardMarkup:
     builder: InlineKeyboardBuilder = InlineKeyboardBuilder()
+    print(buttons)
     builder.add(*buttons)
     if shape:
-        builder.adjust(shape)
+        if isinstance(shape, tuple):
+            builder.adjust(*shape)
+        elif isinstance(shape, int):
+            builder.adjust(shape)
     return builder.as_markup()
 
 
