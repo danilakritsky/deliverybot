@@ -136,3 +136,28 @@ async def get_menu_section_buttons(
         )
         for section in await get_menu_sections(session)
     ]
+
+
+async def get_cart_keyboard(
+    user_state: UserState,
+) -> types.InlineKeyboardMarkup:
+    return await build_inline_keyboard(
+        buttons=await get_inline_buttons(
+            [
+                "decrease",
+                "item_quantity",
+                "increase",
+                "remove_item",
+                "item_total",
+                "add_another_item",
+                "previous_item",
+                "total_item_count",
+                "next_item",
+                "submit_order",
+                "total",
+                "cancel_order",
+            ],
+            user_state,
+        ),
+        shape=(3, 3, 3, 3),
+    )

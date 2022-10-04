@@ -69,25 +69,8 @@ async def add_first_item(
             text=await make_item_description(
                 user_state.current_order_line.item
             ),
-            reply_markup=await keyboards.build_inline_keyboard(
-                buttons=await keyboards.get_inline_buttons(
-                    [
-                        "decrease",
-                        "item_quantity",
-                        "increase",
-                        "remove_item",
-                        "item_total",
-                        "add_another_item",
-                        "previous_item",
-                        "total_item_count",
-                        "next_item",
-                        "submit_order",
-                        "total",
-                        "cancel_order",
-                    ],
-                    user_state,
-                ),
-                shape=(3, 3, 3, 3),
+            reply_markup=await keyboards.get_cart_keyboard(
+                user_state,
             ),
         )
     return updated_message
@@ -102,19 +85,19 @@ async def add_another_item(
     data: dict[str, Any] = await state.get_data()
     async with async_session() as session:
         user_state: UserState = await get_user_state_by_id(data["id"], session)
-        # new_order: Order = Order(user=user_state.user)
-        # session.add(new_order)
-        # await session.commit()
         current_order = await get_order_by_id(
             user_state.current_order_id, session
         )
         menu_item: MenuItem = await get_menu_item_by_id(
             chosen_inline_result.result_id, session
         )
+
         new_order_line: OrderLine = OrderLine(
             item=menu_item,
             quantity=1,
             line_num=len(current_order.order_lines) + 1,
+            price=menu_item.price.price,
+            total=menu_item.price.price * 1,
         )
         session.add(new_order_line)
         await session.commit()
@@ -127,26 +110,7 @@ async def add_another_item(
             text=await make_item_description(
                 user_state.current_order_line.item
             ),
-            reply_markup=await keyboards.build_inline_keyboard(
-                buttons=await keyboards.get_inline_buttons(
-                    [
-                        "decrease",
-                        "item_quantity",
-                        "increase",
-                        "remove_item",
-                        "item_total",
-                        "add_another_item",
-                        "previous_item",
-                        "total_item_count",
-                        "next_item",
-                        "submit_order",
-                        "total",
-                        "cancel_order",
-                    ],
-                    user_state,
-                ),
-                shape=(3, 3, 3, 3),
-            ),
+            reply_markup=await keyboards.get_cart_keyboard(user_state),
         )
     return updated_message
 
@@ -183,26 +147,7 @@ async def decrease_item_quantity(
                     text=await make_item_description(
                         user_state.current_order_line.item
                     ),
-                    reply_markup=await keyboards.build_inline_keyboard(
-                        buttons=await keyboards.get_inline_buttons(
-                            [
-                                "decrease",
-                                "item_quantity",
-                                "increase",
-                                "remove_item",
-                                "item_total",
-                                "add_another_item",
-                                "previous_item",
-                                "total_item_count",
-                                "next_item",
-                                "submit_order",
-                                "total",
-                                "cancel_order",
-                            ],
-                            user_state,
-                        ),
-                        shape=(3, 3, 3, 3),
-                    ),
+                    reply_markup=await keyboards.get_cart_keyboard(user_state),
                 )
                 await callback.answer()
 
@@ -234,27 +179,79 @@ async def increase_item_quantity(
                 text=await make_item_description(
                     user_state.current_order_line.item
                 ),
-                reply_markup=await keyboards.build_inline_keyboard(
-                    buttons=await keyboards.get_inline_buttons(
-                        [
-                            "decrease",
-                            "item_quantity",
-                            "increase",
-                            "remove_item",
-                            "item_total",
-                            "add_another_item",
-                            "previous_item",
-                            "total_item_count",
-                            "next_item",
-                            "submit_order",
-                            "total",
-                            "cancel_order",
-                        ],
-                        user_state,
-                    ),
-                    shape=(3, 3, 3, 3),
-                ),
+                reply_markup=await keyboards.get_cart_keyboard(user_state),
             )
+            await callback.answer()
+
+    return edited_msg if edited_msg else callback.message
+
+
+@router.callback_query(text="next_item", state=OrderState.in_progress)
+async def next_item(
+    callback: types.CallbackQuery, state: FSMContext
+) -> types.Message | bool | None:
+    edited_msg: types.Message | bool | None = None
+    data: dict[str, Any] = await state.get_data()
+    if callback.message:
+        async with async_session() as session:
+            user_state: UserState = await get_user_state_by_id(
+                data["id"], session
+            )
+            current_line_num: int = user_state.current_order_line.line_num
+            current_lines: list[
+                OrderLine
+            ] = user_state.current_order.order_lines
+            if current_line_num == max(
+                line.line_num for line in current_lines
+            ):
+                await callback.answer(text="End of the cart!", show_alert=True)
+            else:
+                next_line: OrderLine = current_lines[current_line_num]
+                user_state.current_order_line = next_line
+
+                await session.commit()
+                user_state = await get_user_state_by_id(data["id"], session)
+                edited_msg = await callback.message.edit_text(
+                    text=await make_item_description(
+                        user_state.current_order_line.item
+                    ),
+                    reply_markup=await keyboards.get_cart_keyboard(user_state),
+                )
+            await callback.answer()
+
+    return edited_msg if edited_msg else callback.message
+
+
+@router.callback_query(text="previous_item", state=OrderState.in_progress)
+async def next_item(
+    callback: types.CallbackQuery, state: FSMContext
+) -> types.Message | bool | None:
+    edited_msg: types.Message | bool | None = None
+    data: dict[str, Any] = await state.get_data()
+    if callback.message:
+        async with async_session() as session:
+            user_state: UserState = await get_user_state_by_id(
+                data["id"], session
+            )
+            current_line_num: int = user_state.current_order_line.line_num
+            current_lines: list[
+                OrderLine
+            ] = user_state.current_order.order_lines
+            if current_line_num == min(
+                line.line_num for line in current_lines
+            ):
+                await callback.answer(text="End of the cart!", show_alert=True)
+            else:
+                next_line: OrderLine = current_lines[current_line_num - 2]
+                user_state.current_order_line = next_line
+                await session.commit()
+                user_state = await get_user_state_by_id(data["id"], session)
+                edited_msg = await callback.message.edit_text(
+                    text=await make_item_description(
+                        user_state.current_order_line.item
+                    ),
+                    reply_markup=await keyboards.get_cart_keyboard(user_state),
+                )
             await callback.answer()
 
     return edited_msg if edited_msg else callback.message
@@ -285,32 +282,12 @@ async def remove_item(
                     ),
                 )
             else:
-                # TODO
                 user_state.current_order_line.line_num
                 edited_msg = await callback.message.edit_text(
                     text=await make_item_description(
                         user_state.current_order_line.item
                     ),
-                    reply_markup=await keyboards.build_inline_keyboard(
-                        buttons=await keyboards.get_inline_buttons(
-                            [
-                                "decrease",
-                                "item_quantity",
-                                "increase",
-                                "remove_item",
-                                "item_total",
-                                "add_another_item",
-                                "previous_item",
-                                "total_item_count",
-                                "next_item",
-                                "submit_order",
-                                "total",
-                                "cancel_order",
-                            ],
-                            user_state,
-                        ),
-                        shape=(3, 3, 3, 3),
-                    ),
+                    reply_markup=await keyboards.get_cart_keyboard(user_state),
                 )
             await callback.answer()
 

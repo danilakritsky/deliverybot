@@ -31,6 +31,7 @@ logging.basicConfig(level=logging.INFO)
 router: Router = Router()
 
 
+@router.callback_query(text="add_another_item")
 @router.callback_query(text="order")
 async def open_menu(
     callback: types.CallbackQuery, state: FSMContext
