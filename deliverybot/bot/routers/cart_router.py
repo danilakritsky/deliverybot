@@ -3,28 +3,18 @@ from typing import Any
 
 from aiogram import Bot, Router, types
 from aiogram.fsm.context import FSMContext
-from aiogram.utils.markdown import hide_link
-from magic_filter import F
-from sqlalchemy import select
 
+import deliverybot.database.helpers as helpers
 from deliverybot.bot import keyboards
-from deliverybot.bot.filters import MenuSectionFilter
 from deliverybot.bot.fsm.states import OrderState
+from deliverybot.bot.replies import CommandReplies
 from deliverybot.bot.routers.helpers import make_item_description
-from deliverybot.config import CONFIG
 from deliverybot.database import (
     MenuItem,
     Order,
     OrderLine,
     UserState,
     async_session,
-)
-from deliverybot.database.helpers import (
-    get_menu_item_by_id,
-    get_order_by_id,
-    get_section_items,
-    get_user_by_id,
-    get_user_state_by_id,
 )
 
 
@@ -42,11 +32,13 @@ async def add_first_item(
     await state.set_state(OrderState.in_progress)
     data: dict[str, Any] = await state.get_data()
     async with async_session() as session:
-        user_state: UserState = await get_user_state_by_id(data["id"], session)
+        user_state: UserState = await helpers.get_user_state_by_id(
+            data["id"], session
+        )
         new_order: Order = Order(user=user_state.user)
         session.add(new_order)
         await session.commit()
-        menu_item: MenuItem = await get_menu_item_by_id(
+        menu_item: MenuItem = await helpers.get_menu_item_by_id(
             chosen_inline_result.result_id, session
         )
         new_order_line: OrderLine = OrderLine(
@@ -58,7 +50,7 @@ async def add_first_item(
         )
         session.add(new_order_line)
         await session.commit()
-        new_order = await get_order_by_id(new_order.id, session)
+        new_order = await helpers.get_order_by_id(new_order.id, session)
         new_order.order_lines.append(new_order_line)
         user_state.current_order = new_order
         user_state.current_order_line = new_order_line
@@ -84,11 +76,13 @@ async def add_another_item(
 ):
     data: dict[str, Any] = await state.get_data()
     async with async_session() as session:
-        user_state: UserState = await get_user_state_by_id(data["id"], session)
-        current_order = await get_order_by_id(
+        user_state: UserState = await helpers.get_user_state_by_id(
+            data["id"], session
+        )
+        current_order = await helpers.get_order_by_id(
             user_state.current_order_id, session
         )
-        menu_item: MenuItem = await get_menu_item_by_id(
+        menu_item: MenuItem = await helpers.get_menu_item_by_id(
             chosen_inline_result.result_id, session
         )
 
@@ -123,7 +117,7 @@ async def decrease_item_quantity(
     data: dict[str, Any] = await state.get_data()
     if callback.message:
         async with async_session() as session:
-            user_state: UserState = await get_user_state_by_id(
+            user_state: UserState = await helpers.get_user_state_by_id(
                 data["id"], session
             )
             qty: int = user_state.current_order_line.quantity
@@ -162,7 +156,7 @@ async def increase_item_quantity(
     data: dict[str, Any] = await state.get_data()
     if callback.message:
         async with async_session() as session:
-            user_state: UserState = await get_user_state_by_id(
+            user_state: UserState = await helpers.get_user_state_by_id(
                 data["id"], session
             )
             user_state.current_order_line.price = (
@@ -194,7 +188,7 @@ async def next_item(
     data: dict[str, Any] = await state.get_data()
     if callback.message:
         async with async_session() as session:
-            user_state: UserState = await get_user_state_by_id(
+            user_state: UserState = await helpers.get_user_state_by_id(
                 data["id"], session
             )
             current_line_num: int = user_state.current_order_line.line_num
@@ -210,7 +204,9 @@ async def next_item(
                 user_state.current_order_line = next_line
 
                 await session.commit()
-                user_state = await get_user_state_by_id(data["id"], session)
+                user_state = await helpers.get_user_state_by_id(
+                    data["id"], session
+                )
                 edited_msg = await callback.message.edit_text(
                     text=await make_item_description(
                         user_state.current_order_line.item
@@ -223,14 +219,14 @@ async def next_item(
 
 
 @router.callback_query(text="previous_item", state=OrderState.in_progress)
-async def next_item(
+async def previous_item(
     callback: types.CallbackQuery, state: FSMContext
 ) -> types.Message | bool | None:
     edited_msg: types.Message | bool | None = None
     data: dict[str, Any] = await state.get_data()
     if callback.message:
         async with async_session() as session:
-            user_state: UserState = await get_user_state_by_id(
+            user_state: UserState = await helpers.get_user_state_by_id(
                 data["id"], session
             )
             current_line_num: int = user_state.current_order_line.line_num
@@ -245,7 +241,9 @@ async def next_item(
                 next_line: OrderLine = current_lines[current_line_num - 2]
                 user_state.current_order_line = next_line
                 await session.commit()
-                user_state = await get_user_state_by_id(data["id"], session)
+                user_state = await helpers.get_user_state_by_id(
+                    data["id"], session
+                )
                 edited_msg = await callback.message.edit_text(
                     text=await make_item_description(
                         user_state.current_order_line.item
@@ -253,7 +251,6 @@ async def next_item(
                     reply_markup=await keyboards.get_cart_keyboard(user_state),
                 )
             await callback.answer()
-            
 
     return edited_msg if edited_msg else callback.message
 
@@ -266,7 +263,7 @@ async def remove_item(
     data: dict[str, Any] = await state.get_data()
     if callback.message:
         async with async_session() as session:
-            user_state: UserState = await get_user_state_by_id(
+            user_state: UserState = await helpers.get_user_state_by_id(
                 data["id"], session
             )
             if len(user_state.current_order.order_lines) == 1:
@@ -282,16 +279,29 @@ async def remove_item(
                         shape=3,
                     ),
                 )
-            # TODO
             else:
+                current_line_num: int = user_state.current_order_line.line_num
                 del user_state.current_order.order_lines[
                     user_state.current_order_line.line_num - 1
                 ]
                 await session.commit()
-                user_state = await get_user_state_by_id(data["id"], session)
-                for line in user_state.current_order.order_lines:
-                    line.line_num -= 1
-                user_state.current_order_line = user_state.current_order.order_lines[0]
+                user_state = await helpers.get_user_state_by_id(
+                    data["id"], session
+                )
+                for num, line in enumerate(
+                    user_state.current_order.order_lines, start=1
+                ):
+                    line.line_num = num
+                await session.commit()
+                user_state.current_order_line = (
+                    user_state.current_order.order_lines[
+                        0 if current_line_num == 1 else current_line_num - 2
+                    ]
+                )
+                await session.commit()
+                user_state = await helpers.get_user_state_by_id(
+                    data["id"], session
+                )
                 edited_msg = await callback.message.edit_text(
                     text=await make_item_description(
                         user_state.current_order_line.item
@@ -301,3 +311,26 @@ async def remove_item(
             await callback.answer()
 
         return edited_msg if edited_msg else callback.message
+
+
+@router.callback_query(text="cancel_order")
+@router.callback_query(text="cancel")
+async def start_cmd_issued(
+    callback: types.Message, state: FSMContext
+) -> list[types.Message]:
+    if callback.message:
+        await state.clear()
+        await state.set_state(OrderState.not_started)
+        await state.update_data(message_id=callback.message.message_id)
+
+        edited_msg = await callback.message.edit_text(
+            text=CommandReplies.HELP,
+            reply_markup=await keyboards.build_inline_keyboard(
+                await keyboards.get_inline_buttons(
+                    ["order", "order_history", "about"]
+                )
+            ),
+        )
+        await callback.answer()
+
+    return edited_msg if edited_msg else callback.message

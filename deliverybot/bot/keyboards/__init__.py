@@ -1,5 +1,3 @@
-import asyncio
-
 from aiogram import types
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -55,7 +53,7 @@ async def get_inline_button(
             )
         case "cancel_order":
             return types.InlineKeyboardButton(
-                text="cancel", callback_data="cancel_order"
+                text="cancel order", callback_data="cancel_order"
             )
         case "submit_order":
             return types.InlineKeyboardButton(
@@ -96,6 +94,11 @@ async def get_inline_button(
                     )
                 ),
                 callback_data="total",
+            )
+        case "back_to_cart":
+            return types.InlineKeyboardButton(
+                text="back to cart",
+                callback_data="back_to_cart",
             )
         case _:
             pass

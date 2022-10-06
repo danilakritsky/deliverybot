@@ -1,29 +1,15 @@
 import logging
-from typing import Any
 
 from aiogram import Bot, Router, types
 from aiogram.fsm.context import FSMContext
 from magic_filter import F
-from sqlalchemy import select
 
+import deliverybot.database.helpers as helpers
 from deliverybot.bot import keyboards
 from deliverybot.bot.filters import MenuSectionFilter
-from deliverybot.bot.fsm.states import OrderState
+from deliverybot.bot.routers.helpers import make_item_description
 from deliverybot.config import CONFIG
-from deliverybot.database import (
-    MenuItem,
-    Order,
-    OrderLine,
-    UserState,
-    async_session,
-)
-from deliverybot.database.helpers import (
-    get_menu_item_by_id,
-    get_order_by_id,
-    get_section_items,
-    get_user_by_id,
-    get_user_state_by_id,
-)
+from deliverybot.database import UserState, async_session
 
 
 logging.basicConfig(level=logging.INFO)
@@ -47,7 +33,15 @@ async def open_menu(
                 text="Choose a menu subsection:",
                 reply_markup=await keyboards.build_inline_keyboard(
                     (await keyboards.get_menu_section_buttons(session))
-                    + (await keyboards.get_inline_buttons(["cancel"])),
+                    + (
+                        await keyboards.get_inline_buttons(
+                            [
+                                "back_to_cart"
+                                if callback.data == "add_another_item"
+                                else "cancel"
+                            ]
+                        )
+                    ),
                     shape=3,
                 ),
             )
@@ -64,7 +58,9 @@ async def show_section_items_inline(
 ) -> bool:
     async with async_session() as session:
         results: list[types.InlineQueryResult] = []
-        for menu_item in await get_section_items(inline_query.query, session):
+        for menu_item in await helpers.get_section_items(
+            inline_query.query, session
+        ):
             item = types.InlineQueryResultArticle(
                 type="article",
                 id=menu_item.id,
@@ -82,6 +78,27 @@ async def show_section_items_inline(
             results.append(item)
 
     return await inline_query.answer(results=results, is_personal=True)
+
+
+@router.callback_query(text="back_to_cart")
+async def back_to_cart(
+    callback: types.CallbackQuery, state: FSMContext
+) -> types.Message | bool | None:
+    edited_msg: types.Message | bool | None = None
+    if callback.message:
+        async with async_session() as session:
+            data = await state.get_data()
+            user_state: UserState = await helpers.get_user_state_by_id(
+                data["id"], session
+            )
+            edited_msg = await callback.message.edit_text(
+                text=await make_item_description(
+                    user_state.current_order_line.item
+                ),
+                reply_markup=await keyboards.get_cart_keyboard(user_state),
+            )
+        await callback.answer()
+        return edited_msg
 
 
 @router.message(F.via_bot)

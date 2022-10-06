@@ -53,6 +53,9 @@ class UserState(Base):
         "OrderLine", uselist=False, single_parent=True
     )
 
+    def __repr__(self):
+        return f"<UserState user_id={self.user_id} state={self.state}>"
+
 
 class User(Base):
     __tablename__ = "users"
@@ -65,6 +68,12 @@ class User(Base):
     phone_number = Column(Text)
 
     orders = relationship("Order", back_populates="user")
+
+    def __repr__(self):
+        return (
+            "<User"
+            f" bot_id={self.bot_id} chat_id={self.chat_id} user_id={self.user_id}>"
+        )
 
 
 class Order(Base):
@@ -103,7 +112,7 @@ class OrderLine(Base):
     total = Column(Float)
 
     def __repr__(self):
-        return f"<OrderItem order_id={self.order_id} item_id={self.item_id}>"
+        return f"<OrderLine order_id={self.order_id} line_num={self.line_num}>"
 
 
 class MenuItem(Base):
@@ -126,6 +135,9 @@ class ItemPrice(Base):
     id = Column(Integer, primary_key=True)
     item_id = Column(Integer, ForeignKey("menu_items.id"))
     price = Column(Float)
+
+    def __repr__(self):
+        return f"<ItemPrice item_id={self.item_id} price={self.price}>"
 
 
 async def init_db():
