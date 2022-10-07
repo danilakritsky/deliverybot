@@ -57,7 +57,7 @@ async def get_inline_button(
             )
         case "submit_order":
             return types.InlineKeyboardButton(
-                text="submit", callback_data="submit_order"
+                text="submit order", callback_data="submit_order"
             )
         case "add_another_item":
             return types.InlineKeyboardButton(
@@ -99,6 +99,11 @@ async def get_inline_button(
             return types.InlineKeyboardButton(
                 text="back to cart",
                 callback_data="back_to_cart",
+            )
+        case "confirm_order":
+            return types.InlineKeyboardButton(
+                text="confirm order",
+                callback_data="confirm order",
             )
         case _:
             pass

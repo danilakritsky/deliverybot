@@ -77,9 +77,9 @@ async def get_user_state_by_id(id: int, session: AsyncSession) -> Order:
         .where(UserState.id == id)
         .options(
             subqueryload(UserState.user),
-            selectinload(UserState.current_order).subqueryload(
-                Order.order_lines
-            ),
+            selectinload(UserState.current_order)
+            .subqueryload(Order.order_lines)
+            .subqueryload(OrderLine.item),
         )
         .options(
             subqueryload(UserState.current_order_line)
@@ -104,5 +104,14 @@ async def get_order_by_id(id: int, session: AsyncSession) -> Order:
         select(Order)
         .where(Order.id == id)
         .options(selectinload(Order.user), selectinload(Order.order_lines))
+    )
+    return await run_select_stmt(stmt, session)
+
+
+async def get_order_line_by_id(id: int, session: AsyncSession) -> OrderLine:
+    stmt = (
+        select(OrderLine)
+        .where(OrderLine.id == id)
+        .options(selectinload(OrderLine.item))
     )
     return await run_select_stmt(stmt, session)

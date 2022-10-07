@@ -334,3 +334,44 @@ async def start_cmd_issued(
         await callback.answer()
 
     return edited_msg if edited_msg else callback.message
+
+
+async def make_order_summary(user_state, session) -> str:
+    total: int = 0
+    line: OrderLine
+    summary: str = ""
+    for line in user_state.current_order.order_lines:
+        order_line: OrderLine = await helpers.get_order_line_by_id(
+            line.id, session
+        )
+        summary += (
+            f"<em>{order_line.item.name}</em>\n"
+            f"{order_line.quantity} pcs. - {order_line.total}\n\n"
+        )
+        total += line.total
+    summary += f"<strong>Total: {total}.</strong>"
+
+    return summary
+
+
+@router.callback_query(text="submit_order")
+async def submit_order(
+    callback: types.Message, state: FSMContext
+) -> list[types.Message]:
+    if callback.message:
+        data = await state.get_data()
+        async with async_session() as session:
+            user_state: UserState = await helpers.get_user_state_by_id(
+                data["id"], session
+            )
+            edited_msg = await callback.message.edit_text(
+                text=await make_order_summary(user_state, session),
+                reply_markup=await keyboards.build_inline_keyboard(
+                    await keyboards.get_inline_buttons(
+                        ["confirm_order", "back_to_cart"]
+                    )
+                ),
+            )
+        await callback.answer()
+
+    return edited_msg if edited_msg else callback.message
