@@ -44,7 +44,6 @@ class UserState(Base):
     current_order = relationship(
         "Order",
         uselist=False,
-        cascade="all, delete-orphan",
         single_parent=True,
     )
 

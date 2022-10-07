@@ -1,3 +1,4 @@
+import datetime
 import logging
 from typing import Any
 
@@ -336,11 +337,12 @@ async def start_cmd_issued(
     return edited_msg if edited_msg else callback.message
 
 
-async def make_order_summary(user_state, session) -> str:
+async def make_order_summary(order, session) -> str:
     total: int = 0
     line: OrderLine
     summary: str = ""
-    for line in user_state.current_order.order_lines:
+    order = await helpers.get_order_by_id(order.id, session)
+    for line in order.order_lines:
         order_line: OrderLine = await helpers.get_order_line_by_id(
             line.id, session
         )
@@ -365,10 +367,45 @@ async def submit_order(
                 data["id"], session
             )
             edited_msg = await callback.message.edit_text(
-                text=await make_order_summary(user_state, session),
+                text=await make_order_summary(
+                    user_state.current_order, session
+                ),
                 reply_markup=await keyboards.build_inline_keyboard(
                     await keyboards.get_inline_buttons(
                         ["confirm_order", "back_to_cart"]
+                    )
+                ),
+            )
+        await callback.answer()
+
+    return edited_msg if edited_msg else callback.message
+
+
+@router.callback_query(text="confirm_order")
+async def confirm_order(
+    callback: types.Message, state: FSMContext
+) -> list[types.Message]:
+    if callback.message:
+        data = await state.get_data()
+        async with async_session() as session:
+            user_state: UserState = await helpers.get_user_state_by_id(
+                data["id"], session
+            )
+            user_state.current_order.datetime = datetime.datetime.now()
+            user_state.current_order.order_total = sum(
+                line.total for line in user_state.current_order.order_lines
+            )
+            await session.commit()
+            user_state.current_order = None
+            user_state.current_order_line = None
+            await session.commit()
+            await state.set_state(OrderState.not_started)
+
+            edited_msg = await callback.message.edit_text(
+                text="Thank you for ordering. Don't forget to leave a review!",
+                reply_markup=await keyboards.build_inline_keyboard(
+                    await keyboards.get_inline_buttons(
+                        ["order", "order_history", "about"]
                     )
                 ),
             )

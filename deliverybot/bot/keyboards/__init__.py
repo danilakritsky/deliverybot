@@ -103,7 +103,7 @@ async def get_inline_button(
         case "confirm_order":
             return types.InlineKeyboardButton(
                 text="confirm order",
-                callback_data="confirm order",
+                callback_data="confirm_order",
             )
         case _:
             pass
