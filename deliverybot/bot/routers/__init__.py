@@ -4,4 +4,5 @@ from deliverybot.bot.routers import (  # noqa: F401
     cart_router,
     info_router,
     menu_router,
+    order_history_router,
 )

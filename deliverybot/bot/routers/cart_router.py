@@ -9,7 +9,10 @@ import deliverybot.database.helpers as helpers
 from deliverybot.bot import keyboards
 from deliverybot.bot.fsm.states import OrderState
 from deliverybot.bot.replies import CommandReplies
-from deliverybot.bot.routers.helpers import make_item_description
+from deliverybot.bot.routers.helpers import (
+    make_item_description,
+    make_order_summary,
+)
 from deliverybot.database import (
     MenuItem,
     Order,
@@ -335,25 +338,6 @@ async def start_cmd_issued(
         await callback.answer()
 
     return edited_msg if edited_msg else callback.message
-
-
-async def make_order_summary(order, session) -> str:
-    total: int = 0
-    line: OrderLine
-    summary: str = ""
-    order = await helpers.get_order_by_id(order.id, session)
-    for line in order.order_lines:
-        order_line: OrderLine = await helpers.get_order_line_by_id(
-            line.id, session
-        )
-        summary += (
-            f"<em>{order_line.item.name}</em>\n"
-            f"{order_line.quantity} pcs. - {order_line.total}\n\n"
-        )
-        total += line.total
-    summary += f"<strong>Total: {total}.</strong>"
-
-    return summary
 
 
 @router.callback_query(text="submit_order")

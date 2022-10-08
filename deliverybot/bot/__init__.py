@@ -1,7 +1,6 @@
 import logging
 
 from aiogram import Bot, Dispatcher
-from aiogram.fsm.storage.memory import MemoryStorage
 
 # https://stackoverflow.com/questions/8899198/module-has-no-attribute
 import deliverybot.bot.routers as routers
@@ -20,7 +19,7 @@ async def main():
     dp.include_router(routers.info_router.router)
     dp.include_router(routers.menu_router.router)
     dp.include_router(routers.cart_router.router)
-
+    dp.include_router(routers.order_history_router.router)
     bot: Bot = Bot(
         token=CONFIG.BOT_TOKEN.get_secret_value(), parse_mode="HTML"
     )

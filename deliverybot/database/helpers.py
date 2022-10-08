@@ -115,3 +115,15 @@ async def get_order_line_by_id(id: int, session: AsyncSession) -> OrderLine:
         .options(selectinload(OrderLine.item))
     )
     return await run_select_stmt(stmt, session)
+
+
+async def get_user_orders(user_id: int, session: AsyncSession) -> list[Order]:
+    stmt = (
+        select(Order)
+        .where(Order.user_id == user_id)
+        .options(selectinload(Order.order_lines))
+    )
+    orders = await run_select_stmt(stmt, session)
+    if not isinstance(orders, list):
+        return [orders]
+    return orders
