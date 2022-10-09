@@ -2,7 +2,7 @@ from aiogram import types
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from deliverybot.database import UserState
+from deliverybot.database import Order, UserState
 from deliverybot.database.helpers import get_menu_sections
 
 
@@ -105,6 +105,16 @@ async def get_inline_button(
                 text="confirm order",
                 callback_data="confirm_order",
             )
+        case "clear_rating":
+            return types.InlineKeyboardButton(
+                text="clear rating",
+                callback_data="clear_rating",
+            )
+        case "add_review":
+            return types.InlineKeyboardButton(
+                text="send a message to add/modify a review",
+                callback_data="add_review",
+            )
         case _:
             pass
 
@@ -168,4 +178,33 @@ async def get_cart_keyboard(
             user_state,
         ),
         shape=(3, 3, 3, 3),
+    )
+
+
+async def get_rating_keyboard(order: Order) -> types.InlineKeyboardMarkup:
+    rating: int = int(order.rating) if order.rating else 0
+    buttons: list[types.InlineKeyboardButton] = []
+    if rating:
+        for i in range(1, rating + 1):
+            buttons.append(
+                types.InlineKeyboardButton(
+                    text="⭐",
+                    callback_data=f"rate_{i}_stars",
+                )
+            )
+    for i in range(rating + 1, 6):
+        buttons.append(
+            types.InlineKeyboardButton(
+                text="☆",
+                callback_data=f"rate_{i}_stars",
+            )
+        )
+    return await build_inline_keyboard(
+        buttons=(
+            buttons
+            + [await get_inline_button("cancel")]
+            + [await get_inline_button("clear_rating")]
+            + [await get_inline_button("add_review")]
+        ),
+        shape=(5, 2, 1),
     )

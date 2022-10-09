@@ -86,7 +86,7 @@ class Order(Base):
     user = relationship("User", back_populates="orders", uselist=False)
 
     review = Column(Text)
-    stars = Column(Integer)
+    rating = Column(Integer)
 
     order_total = Column(Float)
 

@@ -46,5 +46,12 @@ async def make_order_summary(order, session, use_html: str = True) -> str:
             )
         )
         total += line.total
+    newline = "\n"
     summary += f"<strong>Total: {total}.</strong>" if use_html else ""
+    if order.rating:
+        summary += (
+            f"{newline if use_html else ' | '}" + f"{'★' * int(order.rating)}"
+        )
+    if order.review:
+        summary += f"{newline if use_html else ' | '}" + f"{order.review}"
     return summary
