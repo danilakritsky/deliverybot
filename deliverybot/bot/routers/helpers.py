@@ -18,7 +18,7 @@ async def make_item_description(menu_item: MenuItem) -> str:
     )
 
 
-async def make_order_summary(order, session, use_html: str = True) -> str:
+async def make_order_summary(order, session, use_html: bool = True) -> str:
     total: int = 0
     line: OrderLine
     summary: str = ""

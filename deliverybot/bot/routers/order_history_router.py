@@ -1,6 +1,5 @@
-import datetime
 import logging
-from typing import Any
+from typing import Any, Literal
 
 from aiogram import Bot, Router, types
 from aiogram.exceptions import TelegramBadRequest
@@ -9,18 +8,8 @@ from aiogram.fsm.context import FSMContext
 import deliverybot.database.helpers as helpers
 from deliverybot.bot import keyboards
 from deliverybot.bot.fsm.states import OrderState
-from deliverybot.bot.replies import CommandReplies
-from deliverybot.bot.routers.helpers import (
-    make_item_description,
-    make_order_summary,
-)
-from deliverybot.database import (
-    MenuItem,
-    Order,
-    OrderLine,
-    UserState,
-    async_session,
-)
+from deliverybot.bot.routers.helpers import make_order_summary
+from deliverybot.database import UserState, async_session
 
 
 logging.basicConfig(level=logging.INFO)
@@ -31,7 +20,7 @@ router: Router = Router()
 @router.inline_query(
     lambda inline_query: inline_query.query == "order_history"
 )
-async def show_section_items_inline(
+async def show_order_history(
     inline_query: types.InlineQuery,
     state: FSMContext,
 ) -> bool:
@@ -42,7 +31,7 @@ async def show_section_items_inline(
         user_state = await helpers.get_user_state_by_id(data["id"], session)
         orders = await helpers.get_user_orders(user_state.user_id, session)
         for order in orders:
-            order = types.InlineQueryResultArticle(
+            order_detail = types.InlineQueryResultArticle(
                 type="article",
                 id=order.id,
                 title=(
@@ -58,7 +47,7 @@ async def show_section_items_inline(
                     parse_mode="HTML",
                 ),
             )
-            results.append(order)
+            results.append(order_detail)
     await state.set_state(OrderState.reviewing)
     return await inline_query.answer(
         results=results,
@@ -79,7 +68,7 @@ async def add_first_item(
             data["id"], session
         )
         order = await helpers.get_order_by_id(
-            chosen_inline_result.result_id, session
+            int(chosen_inline_result.result_id), session
         )
         user_state.current_order_id = order.id
         await session.commit()
@@ -96,9 +85,9 @@ async def add_first_item(
     lambda query: "rate" in query.data, state=OrderState.reviewing
 )
 async def rate_order(
-    callback: types.Message, state: FSMContext
-) -> list[types.Message]:
-    if callback.message:
+    callback: types.CallbackQuery, state: FSMContext
+) -> types.Message | Literal[True] | None:
+    if callback.message and callback.data:
         data = await state.get_data()
         async with async_session() as session:
             user_state: UserState = await helpers.get_user_state_by_id(
@@ -122,8 +111,8 @@ async def rate_order(
 
 @router.callback_query(text="clear_rating", state=OrderState.reviewing)
 async def clear_rating(
-    callback: types.Message, state: FSMContext
-) -> list[types.Message]:
+    callback: types.CallbackQuery, state: FSMContext
+) -> types.Message | Literal[True] | None:
     if callback.message:
         data = await state.get_data()
         async with async_session() as session:
@@ -149,7 +138,7 @@ async def clear_rating(
 @router.message(state=OrderState.reviewing)
 async def post_review(
     message: types.Message, state: FSMContext, bot: Bot
-) -> list[types.Message]:
+) -> types.Message | Literal[True] | types.CallbackQuery:
     data = await state.get_data()
     async with async_session() as session:
         user_state: UserState = await helpers.get_user_state_by_id(
@@ -169,8 +158,35 @@ async def post_review(
                     reply_markup=await keyboards.get_rating_keyboard(order),
                 )
             )
+        # NOTE: ignore the warning that a non-modified message is returned
         except TelegramBadRequest:
             pass
         finally:
             await message.delete()
     return updated_message if updated_message else message
+
+
+@router.callback_query(text="clear_review", state=OrderState.reviewing)
+async def clear_review(
+    callback: types.CallbackQuery, state: FSMContext
+) -> types.Message | Literal[True] | None:
+    if callback.message:
+        data = await state.get_data()
+        async with async_session() as session:
+            user_state: UserState = await helpers.get_user_state_by_id(
+                data["id"], session
+            )
+            order = await helpers.get_order_by_id(
+                user_state.current_order_id, session
+            )
+            order.review = None
+            await session.commit()
+            edited_msg = await callback.message.edit_text(
+                text=await make_order_summary(
+                    user_state.current_order, session
+                ),
+                reply_markup=await keyboards.get_rating_keyboard(order),
+            )
+        await callback.answer()
+
+    return edited_msg if edited_msg else callback.message

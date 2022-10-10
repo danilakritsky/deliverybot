@@ -110,6 +110,11 @@ async def get_inline_button(
                 text="clear rating",
                 callback_data="clear_rating",
             )
+        case "clear_review":
+            return types.InlineKeyboardButton(
+                text="clear review",
+                callback_data="clear_review",
+            )
         case "add_review":
             return types.InlineKeyboardButton(
                 text="send a message to add/modify a review",
@@ -120,15 +125,15 @@ async def get_inline_button(
 
 
 async def get_inline_buttons(
-    buttons: list[types.InlineKeyboardButton],
+    buttons: list[str],
     user_state: UserState | None = None,
-) -> types.InlineKeyboardMarkup:
+) -> list[types.InlineKeyboardButton]:
     return [await get_inline_button(button, user_state) for button in buttons]
 
 
 async def build_inline_keyboard(
     buttons: list[types.InlineKeyboardButton],
-    shape: tuple[int] | int | None = None,
+    shape: tuple[int, ...] | int | None = None,
 ) -> types.InlineKeyboardMarkup:
     builder: InlineKeyboardBuilder = InlineKeyboardBuilder()
     print(buttons)
@@ -147,7 +152,7 @@ async def format_float(float_num: float):
 
 async def get_menu_section_buttons(
     session: AsyncSession,
-) -> types.InlineKeyboardMarkup:
+) -> list[types.InlineKeyboardButton]:
     return [
         types.InlineKeyboardButton(
             text=section, switch_inline_query_current_chat=section
@@ -202,9 +207,10 @@ async def get_rating_keyboard(order: Order) -> types.InlineKeyboardMarkup:
     return await build_inline_keyboard(
         buttons=(
             buttons
-            + [await get_inline_button("cancel")]
-            + [await get_inline_button("clear_rating")]
             + [await get_inline_button("add_review")]
+            + [await get_inline_button("clear_rating")]
+            + [await get_inline_button("clear_review")]
+            + [await get_inline_button("cancel")]
         ),
-        shape=(5, 2, 1),
+        shape=(5, 1, 2, 1),
     )

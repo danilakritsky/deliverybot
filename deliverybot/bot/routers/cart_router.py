@@ -1,6 +1,6 @@
 import datetime
 import logging
-from typing import Any
+from typing import Any, Literal
 
 from aiogram import Bot, Router, types
 from aiogram.fsm.context import FSMContext
@@ -43,7 +43,7 @@ async def add_first_item(
         session.add(new_order)
         await session.commit()
         menu_item: MenuItem = await helpers.get_menu_item_by_id(
-            chosen_inline_result.result_id, session
+            int(chosen_inline_result.result_id), session
         )
         new_order_line: OrderLine = OrderLine(
             item=menu_item,
@@ -87,7 +87,7 @@ async def add_another_item(
             user_state.current_order_id, session
         )
         menu_item: MenuItem = await helpers.get_menu_item_by_id(
-            chosen_inline_result.result_id, session
+            int(chosen_inline_result.result_id), session
         )
 
         new_order_line: OrderLine = OrderLine(
@@ -320,8 +320,8 @@ async def remove_item(
 @router.callback_query(text="cancel_order")
 @router.callback_query(text="cancel")
 async def start_cmd_issued(
-    callback: types.Message, state: FSMContext
-) -> list[types.Message]:
+    callback: types.CallbackQuery, state: FSMContext
+) -> types.Message | Literal[True] | None:
     if callback.message:
         await state.clear()
         await state.set_state(OrderState.not_started)
@@ -342,8 +342,8 @@ async def start_cmd_issued(
 
 @router.callback_query(text="submit_order")
 async def submit_order(
-    callback: types.Message, state: FSMContext
-) -> list[types.Message]:
+    callback: types.CallbackQuery, state: FSMContext
+) -> types.Message | Literal[True] | None:
     if callback.message:
         data = await state.get_data()
         async with async_session() as session:
@@ -367,8 +367,8 @@ async def submit_order(
 
 @router.callback_query(text="confirm_order")
 async def confirm_order(
-    callback: types.Message, state: FSMContext
-) -> list[types.Message]:
+    callback: types.CallbackQuery, state: FSMContext
+) -> types.Message | Literal[True] | None:
     if callback.message:
         data = await state.get_data()
         async with async_session() as session:

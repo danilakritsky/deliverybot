@@ -33,6 +33,7 @@ line-length = 79
 show_error_codes = true
 allow_redefinition = true
 ignore_missing_imports = true
+disable_error_code = ["union-attr", "return"]
 
 [tool.isort]
 profile = "black"

@@ -9,8 +9,8 @@ from sqlalchemy import (
     UniqueConstraint,
 )
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
-from sqlalchemy.ext.hybrid import hybrid_method, hybrid_property
 from sqlalchemy.orm import registry, relationship, sessionmaker
+from sqlalchemy.orm.decl_api import DeclarativeMeta
 
 from deliverybot.config import CONFIG
 
@@ -26,7 +26,8 @@ async_session: AsyncSession = sessionmaker(
 )
 
 mapper_registry = registry()
-Base = mapper_registry.generate_base()
+
+Base: DeclarativeMeta = mapper_registry.generate_base()
 
 
 class UserState(Base):
@@ -71,7 +72,8 @@ class User(Base):
     def __repr__(self):
         return (
             "<User"
-            f" bot_id={self.bot_id} chat_id={self.chat_id} user_id={self.user_id}>"
+            + f" bot_id={self.bot_id} chat_id={self.chat_id}"
+            + f" user_id={self.user_id}>"
         )
 
 

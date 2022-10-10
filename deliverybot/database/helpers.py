@@ -3,14 +3,7 @@ from sqlalchemy.future import select
 from sqlalchemy.orm import selectinload, subqueryload
 from sqlalchemy.sql.expression import Select
 
-from deliverybot.database import (
-    ItemPrice,
-    MenuItem,
-    Order,
-    OrderLine,
-    User,
-    UserState,
-)
+from deliverybot.database import MenuItem, Order, OrderLine, User, UserState
 
 
 async def run_select_stmt(stmt: Select, session: AsyncSession):
@@ -29,7 +22,9 @@ async def get_menu_sections(session: AsyncSession) -> list[str]:
     return await run_select_stmt(stmt, session)
 
 
-async def get_section_items(section: str, session: AsyncSession) -> list[dict]:
+async def get_section_items(
+    section: str, session: AsyncSession
+) -> list[MenuItem]:
     stmt = (
         select(MenuItem).where(MenuItem.section == section)
         # https://stackoverflow.com/questions/70104873/how-to-access-relationships-with-async-sqlalchemy
