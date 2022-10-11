@@ -42,6 +42,7 @@ class SQLiteStorage(BaseStorage):
                     return
 
                 if state is None:
+                    await session.delete(user_state.current_order)
                     await session.delete(user_state)
                 elif not user_state and not user:
                     # NOTE session.add shoud NOT be awaited

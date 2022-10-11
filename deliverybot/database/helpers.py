@@ -3,7 +3,14 @@ from sqlalchemy.future import select
 from sqlalchemy.orm import selectinload, subqueryload
 from sqlalchemy.sql.expression import Select
 
-from deliverybot.database import MenuItem, Order, OrderLine, User, UserState
+from deliverybot.database import (
+    MenuItem,
+    MessageText,
+    Order,
+    OrderLine,
+    User,
+    UserState,
+)
 
 
 async def run_select_stmt(stmt: Select, session: AsyncSession):
@@ -122,3 +129,11 @@ async def get_user_orders(user_id: int, session: AsyncSession) -> list[Order]:
     if not isinstance(orders, list):
         return [orders]
     return orders
+
+
+async def get_message_text_by_placeholder(
+    placeholder: str, session: AsyncSession
+) -> str:
+    stmt = select(MessageText).where(MessageText.placeholder == placeholder)
+    message = await run_select_stmt(stmt, session)
+    return message.text if message.text else message.placeholder

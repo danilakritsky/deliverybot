@@ -10,6 +10,7 @@ from deliverybot.bot.filters import MenuSectionFilter
 from deliverybot.bot.routers.helpers import make_item_description
 from deliverybot.config import CONFIG
 from deliverybot.database import UserState, async_session
+from deliverybot.database.helpers import get_message_text_by_placeholder
 
 
 logging.basicConfig(level=logging.INFO)
@@ -30,7 +31,9 @@ async def open_menu(
     if callback.message:
         async with async_session() as session:
             edited_msg = await callback.message.edit_text(
-                text="Choose a menu subsection:",
+                text=await get_message_text_by_placeholder(
+                    "subsection_choice", session
+                ),
                 reply_markup=await keyboards.build_inline_keyboard(
                     (await keyboards.get_menu_section_buttons(session))
                     + (

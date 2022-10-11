@@ -8,7 +8,6 @@ from aiogram.fsm.context import FSMContext
 import deliverybot.database.helpers as helpers
 from deliverybot.bot import keyboards
 from deliverybot.bot.fsm.states import OrderState
-from deliverybot.bot.replies import CommandReplies
 from deliverybot.bot.routers.helpers import (
     make_item_description,
     make_order_summary,
@@ -128,7 +127,10 @@ async def decrease_item_quantity(
 
             if qty == 1:
                 await callback.answer(
-                    text="Can't decrease past 0.", show_alert=True
+                    text=await helpers.get_message_text_by_placeholder(
+                        "below_zero_quantity_error", session
+                    ),
+                    show_alert=True,
                 )
             else:
                 # update price if it has changed
@@ -202,7 +204,12 @@ async def next_item(
             if current_line_num == max(
                 line.line_num for line in current_lines
             ):
-                await callback.answer(text="End of the cart!", show_alert=True)
+                await callback.answer(
+                    text=await helpers.get_message_text_by_placeholder(
+                        "end_of_the_cart_error", session
+                    ),
+                    show_alert=True,
+                )
             else:
                 next_line: OrderLine = current_lines[current_line_num]
                 user_state.current_order_line = next_line
@@ -240,7 +247,12 @@ async def previous_item(
             if current_line_num == min(
                 line.line_num for line in current_lines
             ):
-                await callback.answer(text="End of the cart!", show_alert=True)
+                await callback.answer(
+                    text=await helpers.get_message_text_by_placeholder(
+                        "end_of_the_cart_error", session
+                    ),
+                    show_alert=True,
+                )
             else:
                 next_line: OrderLine = current_lines[current_line_num - 2]
                 user_state.current_order_line = next_line
@@ -276,7 +288,9 @@ async def remove_item(
                 await state.set_state(OrderState.not_started)
                 await state.update_data(message_id=message_id)
                 edited_msg = await callback.message.edit_text(
-                    text="Cart is empty, please select an item:",
+                    text=await helpers.get_message_text_by_placeholder(
+                        "empty_cart", session
+                    ),
                     reply_markup=await keyboards.build_inline_keyboard(
                         (await keyboards.get_menu_section_buttons(session))
                         + (await keyboards.get_inline_buttons(["cancel"])),
@@ -326,15 +340,17 @@ async def start_cmd_issued(
         await state.clear()
         await state.set_state(OrderState.not_started)
         await state.update_data(message_id=callback.message.message_id)
-
-        edited_msg = await callback.message.edit_text(
-            text=CommandReplies.HELP,
-            reply_markup=await keyboards.build_inline_keyboard(
-                await keyboards.get_inline_buttons(
-                    ["order", "order_history", "about"]
-                )
-            ),
-        )
+        async with async_session() as session:
+            edited_msg = await callback.message.edit_text(
+                text=await helpers.get_message_text_by_placeholder(
+                    "help", session
+                ),
+                reply_markup=await keyboards.build_inline_keyboard(
+                    await keyboards.get_inline_buttons(
+                        ["order", "order_history", "about"]
+                    )
+                ),
+            )
         await callback.answer()
 
     return edited_msg if edited_msg else callback.message
@@ -386,7 +402,9 @@ async def confirm_order(
             await state.set_state(OrderState.not_started)
 
             edited_msg = await callback.message.edit_text(
-                text="Thank you for ordering. Don't forget to leave a review!",
+                text=await helpers.get_message_text_by_placeholder(
+                    "order_submitted_prompt_for_review", session
+                ),
                 reply_markup=await keyboards.build_inline_keyboard(
                     await keyboards.get_inline_buttons(
                         ["order", "order_history", "about"]

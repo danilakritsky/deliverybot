@@ -31,6 +31,7 @@ async def show_order_history(
         user_state = await helpers.get_user_state_by_id(data["id"], session)
         orders = await helpers.get_user_orders(user_state.user_id, session)
         for order in orders:
+            print(order.datetime, "!!!!!!")
             order_detail = types.InlineQueryResultArticle(
                 type="article",
                 id=order.id,

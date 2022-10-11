@@ -141,6 +141,17 @@ class ItemPrice(Base):
         return f"<ItemPrice item_id={self.item_id} price={self.price}>"
 
 
+class MessageText(Base):
+    __tablename__ = "message_texts"
+
+    id = Column(Integer, primary_key=True)
+    placeholder = Column(Text)
+    text = Column(Text)
+
+    def __repr__(self):
+        return f"<MessageText placeholder={self.placeholder} text={self.text}>"
+
+
 async def init_db():
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.drop_all)
@@ -163,6 +174,56 @@ async def init_db():
                     )
                     for num in (1, 2, 3)
                     for section in ("meals", "drinks", "desserts")
+                ]
+            )
+
+            session.add_all(
+                [
+                    MessageText(
+                        placeholder="about",
+                        text=(
+                            "<strong>About us.</strong>\nEstablished in 2022."
+                        ),
+                    ),
+                    MessageText(
+                        placeholder="start",
+                        text="Welcome to <strong>our restaurant</strong>!",
+                    ),
+                    MessageText(
+                        placeholder="help",
+                        text=(
+                            "<strong>Bot usage</strong>\n"
+                            "<em>Making an order:</em>\n"
+                            "1. select a meal\n"
+                            "2. use + and - to change quantity\n"
+                            "3. use -&gt and &lt- to navigate your cart\n"
+                            "If you feel stuck use <pre>help</pre> button "
+                            "or enter the <pre>/help</pre> command."
+                        ),
+                    ),
+                    MessageText(
+                        placeholder="subsection_choice",
+                        text="Choose a menu subsection:",
+                    ),
+                    MessageText(
+                        placeholder="below_zero_quantity_error",
+                        text="Can't decrease past 0!",
+                    ),
+                    MessageText(
+                        placeholder="end_of_the_cart_error",
+                        text="End of the cart!",
+                    ),
+                    MessageText(
+                        placeholder="empty_cart",
+                        text="Cart is empty, please select an item:",
+                    ),
+                    MessageText(
+                        placeholder="order_submitted_prompt_for_review",
+                        text=(
+                            "Thank you for ordering. "
+                            "Don't forget to leave a review!"
+                        ),
+                    ),
                 ]
             )
 
