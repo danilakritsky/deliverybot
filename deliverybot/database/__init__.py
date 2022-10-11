@@ -180,25 +180,23 @@ async def init_db():
             session.add_all(
                 [
                     MessageText(
-                        placeholder="about",
-                        text=(
-                            "<strong>About us.</strong>\nEstablished in 2022."
-                        ),
+                        placeholder="start",
+                        text="Welcome!",
                     ),
                     MessageText(
-                        placeholder="start",
-                        text="Welcome to <strong>our restaurant</strong>!",
+                        placeholder="about",
+                        text=(
+                            "<strong>About us.</strong>\n"
+                            "Some text about the venue"
+                        ),
                     ),
                     MessageText(
                         placeholder="help",
                         text=(
                             "<strong>Bot usage</strong>\n"
-                            "<em>Making an order:</em>\n"
-                            "1. select a meal\n"
-                            "2. use + and - to change quantity\n"
-                            "3. use -&gt and &lt- to navigate your cart\n"
-                            "If you feel stuck use <pre>help</pre> button "
-                            "or enter the <pre>/help</pre> command."
+                            "press <em>order</em> - to make an order\n"
+                            "press <em>order history</em>"
+                            " to view all your orders and leave a review"
                         ),
                     ),
                     MessageText(
