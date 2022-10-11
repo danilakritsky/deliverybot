@@ -30,35 +30,36 @@ async def show_order_history(
 
         user_state = await helpers.get_user_state_by_id(data["id"], session)
         orders = await helpers.get_user_orders(user_state.user_id, session)
-        for order in orders:
-            print(order.datetime, "!!!!!!")
-            order_detail = types.InlineQueryResultArticle(
-                type="article",
-                id=order.id,
-                title=(
-                    f"Date: {order.datetime:%Y-%m-%d %H:%M:%S}\n"
-                    " - "
-                    f"Total: {order.order_total}"
-                ),
-                description=await make_order_summary(
-                    order, session, use_html=False
-                ),
-                input_message_content=types.InputTextMessageContent(
-                    message_text=f"{order.id} selected",
-                    parse_mode="HTML",
-                ),
+        if any(orders):
+            for order in orders:
+                order_detail = types.InlineQueryResultArticle(
+                    type="article",
+                    id=order.id,
+                    title=(
+                        f"Date: {order.datetime:%Y-%m-%d %H:%M:%S}\n"
+                        " - "
+                        f"Total: {order.order_total}"
+                    ),
+                    description=await make_order_summary(
+                        order, session, use_html=False
+                    ),
+                    input_message_content=types.InputTextMessageContent(
+                        message_text=f"{order.id} selected",
+                        parse_mode="HTML",
+                    ),
+                )
+                results.append(order_detail)
+            await state.set_state(OrderState.reviewing)
+            return await inline_query.answer(
+                results=results,
+                is_personal=True,
+                # NOTE: don't cache results to fetch newest orders
+                cache_time=0,
             )
-            results.append(order_detail)
-    await state.set_state(OrderState.reviewing)
-    return await inline_query.answer(
-        results=results,
-        is_personal=True,
-        cache_time=0,  # NOTE: don't cache results to fetch newest orders
-    )
 
 
 @router.chosen_inline_result(state=OrderState.reviewing)
-async def add_first_item(
+async def select_order(
     chosen_inline_result: types.ChosenInlineResult,
     state: FSMContext,
     bot: Bot,
@@ -187,6 +188,34 @@ async def clear_review(
                     user_state.current_order, session
                 ),
                 reply_markup=await keyboards.get_rating_keyboard(order),
+            )
+        await callback.answer()
+
+    return edited_msg if edited_msg else callback.message
+
+
+@router.callback_query(text="cancel", state=OrderState.reviewing)
+async def cancel(
+    callback: types.CallbackQuery, state: FSMContext
+) -> types.Message | Literal[True] | None:
+    if callback.message:
+        data = await state.get_data()
+        await state.set_state(OrderState.not_started)
+        async with async_session() as session:
+            user_state: UserState = await helpers.get_user_state_by_id(
+                data["id"], session
+            )
+            user_state.current_order = None
+            await session.commit()
+            edited_msg = await callback.message.edit_text(
+                text=await helpers.get_message_text_by_placeholder(
+                    "help", session
+                ),
+                reply_markup=await keyboards.build_inline_keyboard(
+                    await keyboards.get_inline_buttons(
+                        ["order", "order_history", "about"]
+                    )
+                ),
             )
         await callback.answer()
 

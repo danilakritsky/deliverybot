@@ -26,13 +26,12 @@ logging.basicConfig(level=logging.INFO)
 router: Router = Router()
 
 
-@router.chosen_inline_result(state=OrderState.not_started)
+@router.chosen_inline_result(state=OrderState.selecting_first_item)
 async def add_first_item(
     chosen_inline_result: types.ChosenInlineResult,
     state: FSMContext,
     bot: Bot,
 ):
-    await state.set_state(OrderState.in_progress)
     data: dict[str, Any] = await state.get_data()
     async with async_session() as session:
         user_state: UserState = await helpers.get_user_state_by_id(
@@ -68,6 +67,7 @@ async def add_first_item(
                 user_state,
             ),
         )
+    await state.set_state(state=OrderState.in_progress)
     return updated_message
 
 
@@ -332,8 +332,9 @@ async def remove_item(
 
 
 @router.callback_query(text="cancel_order")
-@router.callback_query(text="cancel")
-async def start_cmd_issued(
+@router.callback_query(text="cancel", state=OrderState.in_progress)
+@router.callback_query(text="cancel", state=OrderState.selecting_first_item)
+async def cancel(
     callback: types.CallbackQuery, state: FSMContext
 ) -> types.Message | Literal[True] | None:
     if callback.message:

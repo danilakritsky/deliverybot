@@ -42,7 +42,8 @@ class SQLiteStorage(BaseStorage):
                     return
 
                 if state is None:
-                    await session.delete(user_state.current_order)
+                    if user_state.current_order:
+                        await session.delete(user_state.current_order)
                     await session.delete(user_state)
                 elif not user_state and not user:
                     # NOTE session.add shoud NOT be awaited
@@ -140,14 +141,13 @@ class SQLiteStorage(BaseStorage):
         :return: current data
         """
         async with async_session() as session:
-            return (
-                await get_user_state(
-                    bot_id=key.bot_id,
-                    chat_id=key.chat_id,
-                    user_id=key.user_id,
-                    session=session,
-                )
-            ).__dict__
+            user_state = await get_user_state(
+                bot_id=key.bot_id,
+                chat_id=key.chat_id,
+                user_id=key.user_id,
+                session=session,
+            )
+            return user_state.__dict__ if user_state else {}
 
     async def update_data(
         self, bot: Bot, key: StorageKey, data: dict[str, Any]

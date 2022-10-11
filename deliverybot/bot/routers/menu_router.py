@@ -7,6 +7,7 @@ from magic_filter import F
 import deliverybot.database.helpers as helpers
 from deliverybot.bot import keyboards
 from deliverybot.bot.filters import MenuSectionFilter
+from deliverybot.bot.fsm.states import OrderState
 from deliverybot.bot.routers.helpers import make_item_description
 from deliverybot.config import CONFIG
 from deliverybot.database import UserState, async_session
@@ -29,6 +30,8 @@ async def open_menu(
     # inline_query.answer expects results to be a list of ResuInlineQueryResult
     edited_msg: types.Message | bool | None = None
     if callback.message:
+        if callback.data == "order":
+            await state.set_state(OrderState.selecting_first_item)
         async with async_session() as session:
             edited_msg = await callback.message.edit_text(
                 text=await get_message_text_by_placeholder(
