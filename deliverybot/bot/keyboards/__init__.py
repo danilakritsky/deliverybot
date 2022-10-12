@@ -33,27 +33,31 @@ async def get_inline_button(
             )
         case "decrease":
             return types.InlineKeyboardButton(
-                text="-", callback_data="decrease"
+                text="➖", callback_data="decrease"
             )
         case "increase":
             return types.InlineKeyboardButton(
-                text="+", callback_data="increase"
+                text="➕", callback_data="increase"
             )
         case "previous_item":
             return types.InlineKeyboardButton(
-                text="<-", callback_data="previous_item"
+                text="⬅️", callback_data="previous_item"
             )
         case "next_item":
             return types.InlineKeyboardButton(
-                text="->", callback_data="next_item"
+                text="➡️", callback_data="next_item"
             )
         case "remove_item":
             return types.InlineKeyboardButton(
-                text="x", callback_data="remove_item"
+                text="❌", callback_data="remove_item"
             )
         case "cancel_order":
             return types.InlineKeyboardButton(
                 text="cancel order", callback_data="cancel_order"
+            )
+        case "back":
+            return types.InlineKeyboardButton(
+                text="back", callback_data="back"
             )
         case "submit_order":
             return types.InlineKeyboardButton(
@@ -210,7 +214,7 @@ async def get_rating_keyboard(order: Order) -> types.InlineKeyboardMarkup:
             + [await get_inline_button("add_review")]
             + [await get_inline_button("clear_rating")]
             + [await get_inline_button("clear_review")]
-            + [await get_inline_button("cancel")]
+            + [await get_inline_button("back")]
         ),
         shape=(5, 1, 2, 1),
     )

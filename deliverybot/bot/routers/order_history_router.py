@@ -194,8 +194,8 @@ async def clear_review(
     return edited_msg if edited_msg else callback.message
 
 
-@router.callback_query(text="cancel", state=OrderState.reviewing)
-async def cancel(
+@router.callback_query(text="back", state=OrderState.reviewing)
+async def back(
     callback: types.CallbackQuery, state: FSMContext
 ) -> types.Message | Literal[True] | None:
     if callback.message:

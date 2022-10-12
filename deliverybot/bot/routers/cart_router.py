@@ -285,7 +285,7 @@ async def remove_item(
             if len(user_state.current_order.order_lines) == 1:
                 message_id: int = user_state.message_id
                 await state.clear()
-                await state.set_state(OrderState.not_started)
+                await state.set_state(OrderState.selecting_first_item)
                 await state.update_data(message_id=message_id)
                 edited_msg = await callback.message.edit_text(
                     text=await helpers.get_message_text_by_placeholder(

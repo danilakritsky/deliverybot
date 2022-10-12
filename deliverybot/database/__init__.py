@@ -181,19 +181,19 @@ async def init_db():
                 [
                     MessageText(
                         placeholder="start",
-                        text="Welcome!",
+                        text="Welcome!👋",
                     ),
                     MessageText(
                         placeholder="about",
                         text=(
                             "<strong>About us.</strong>\n"
-                            "Some text about the venue"
+                            "Some text about the venue."
                         ),
                     ),
                     MessageText(
                         placeholder="help",
                         text=(
-                            "<strong>Bot usage</strong>\n"
+                            "<strong>🤖Bot usage</strong>\n"
                             "press <em>order</em> - to make an order\n"
                             "press <em>order history</em>"
                             " to view all your orders and leave a review"
@@ -201,11 +201,11 @@ async def init_db():
                     ),
                     MessageText(
                         placeholder="subsection_choice",
-                        text="Choose a menu subsection:",
+                        text="🛒Choose a menu subsection:",
                     ),
                     MessageText(
                         placeholder="below_zero_quantity_error",
-                        text="Can't decrease past 0!",
+                        text="Can't decrease past 1!",
                     ),
                     MessageText(
                         placeholder="end_of_the_cart_error",
@@ -213,12 +213,12 @@ async def init_db():
                     ),
                     MessageText(
                         placeholder="empty_cart",
-                        text="Cart is empty, please select an item:",
+                        text="🛒Cart is empty, please add an item!",
                     ),
                     MessageText(
                         placeholder="order_submitted_prompt_for_review",
                         text=(
-                            "Thank you for ordering. "
+                            "Thank you for ordering!🙏\n"
                             "Don't forget to leave a review!"
                         ),
                     ),
