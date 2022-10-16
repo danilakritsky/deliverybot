@@ -8,12 +8,15 @@ readme = "README.md"
 
 [tool.poetry.dependencies]
 python = "^3.10"
+
+[tool.poetry.group.bot.dependencies]
 pydantic = "^1.10.2"
 aiogram = {version = "^3.0.0b4", allow-prereleases = true}
-Flask = "^2.2.2"
 SQLAlchemy = {extras = ["asyncio"], version = "^1.4.41"}
 aiosqlite = "^0.17.0"
 
+[tool.poetry.group.server.dependencies]
+Flask = "^2.2.2"
 
 [tool.poetry.group.dev.dependencies]
 black = "^22.8.0"

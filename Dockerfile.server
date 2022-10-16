@@ -38,7 +38,7 @@ RUN curl https://pyenv.run | bash
 RUN curl -sSL https://install.python-poetry.org | python3 -
 RUN export PATH="/home/vscode/.local/bin:$PATH"
 
-COPY deliverybot/ deliverybot/deliverybot
+COPY deliverybot deliverybot/deliverybot
 COPY scripts/ deliverybot/scripts
 COPY pyproject.toml deliverybot
 COPY poetry.lock deliverybot
@@ -49,4 +49,4 @@ RUN chmod a+wx -R ./deliverybot
 USER vscode
 
 WORkDIR ./deliverybot
-RUN /home/vscode/.local/bin/poetry install
+RUN /home/vscode/.local/bin/poetry install --without dev,bot
