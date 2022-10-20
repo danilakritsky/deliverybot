@@ -8,3 +8,7 @@ app = Flask(__name__, static_url_path="/static/photos")
 @app.route("/photos/<photo_name>")
 def send_photo(photo_name):
     return send_from_directory("./static/photos", f"{photo_name}")
+
+@app.route("/")
+def index():
+    return "Hello, World!"
