@@ -6,9 +6,8 @@ services:
       context: .
       dockerfile: Dockerfile.bot
     container_name: bot    
-    environment:
-      - SERVER_URI=http://server:5000
-      - BOT_TOKEN=5736451736:AAFF6tpvcoavXlN0qIVySdy_zuIxk59YMd8
+    env_file:
+      - .env
     # run sh to persist after deployment
     command: /home/vscode/.local/bin/poetry run python -m deliverybot.bot
     depends_on:
@@ -20,7 +19,7 @@ services:
       context: .
       dockerfile: Dockerfile.server
     container_name: server
-    command: /home/vscode/.local/bin/poetry run flask --app deliverybot/server/app.py run
+    command: /home/vscode/.local/bin/poetry run flask --app deliverybot/server/app.py run --host=0.0.0.0
     ports:
       - 5000:5000
 
