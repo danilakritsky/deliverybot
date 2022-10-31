@@ -5,13 +5,15 @@ services:
     build: 
       context: .
       dockerfile: Dockerfile.bot
-    container_name: bot    
+    container_name: bot
     env_file:
       - .env
     # run sh to persist after deployment
     command: /home/vscode/.local/bin/poetry run python -m deliverybot.bot
     depends_on:
       - server
+    volumes:
+      - ./deliverybot/bot:/home/vscode/deliverybot/deliverybot/bot
     tty: true  # persist (should use 'sh' as entrypoint)
 
   server:
@@ -20,6 +22,8 @@ services:
       dockerfile: Dockerfile.server
     container_name: server
     command: /home/vscode/.local/bin/poetry run flask --app deliverybot/server/app.py run --host=0.0.0.0
+    volumes:
+      - ./deliverybot/server:/home/vscode/deliverybot/deliverybot/server
     ports:
       - 5000:5000
 

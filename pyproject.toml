@@ -11,12 +11,14 @@ python = "^3.10"
 
 [tool.poetry.group.bot.dependencies]
 pydantic = "^1.10.2"
-aiogram = {version = "^3.0.0b4", allow-prereleases = true}
+aiogram = {version = "3.0.0b4", allow-prereleases = true}
 SQLAlchemy = {extras = ["asyncio"], version = "^1.4.41"}
 aiosqlite = "^0.17.0"
 
 [tool.poetry.group.server.dependencies]
 Flask = "^2.2.2"
+flask-cors="^3.0.10"
+gunicorn = "^20.1.0"
 
 [tool.poetry.group.dev.dependencies]
 black = "^22.8.0"
