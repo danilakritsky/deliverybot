@@ -78,12 +78,18 @@ async def show_section_items_inline(
                 ),
                 thumb_url=(
                     f"{CONFIG.SERVER_URI.get_secret_value()}"
-                    f"/photos/{menu_item.photo_filename}"
+                    f"/images/v1/{menu_item.photo_filename}"
                 ),
+                thumb_width=300,
+                thumb_height=300
             )
             results.append(item)
 
-    return await inline_query.answer(results=results, is_personal=True)
+    return await inline_query.answer(
+        cache_time=0,
+        results=results,
+        is_personal=True
+    )
 
 
 @router.callback_query(text="back_to_cart")

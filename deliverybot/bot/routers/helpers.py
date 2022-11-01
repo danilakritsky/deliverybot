@@ -8,7 +8,7 @@ from deliverybot.database import MenuItem, OrderLine
 async def make_item_description(menu_item: MenuItem) -> str:
     link: str = (
         f"{CONFIG.SERVER_URI.get_secret_value()}"
-        f"/photos/{menu_item.photo_filename}"
+        f"/images/v1/{menu_item.photo_filename}"
     )
     return (
         f"{hide_link(link)}"

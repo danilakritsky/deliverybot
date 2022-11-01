@@ -219,7 +219,8 @@ async def init_db():
                         placeholder="order_submitted_prompt_for_review",
                         text=(
                             "Thank you for ordering!🙏\n"
-                            "Don't forget to leave a review!"
+                            "Go to <em>order history</em> to leave a review"
+                            " for this order!"
                         ),
                     ),
                 ]

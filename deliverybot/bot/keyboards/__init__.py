@@ -121,7 +121,10 @@ async def get_inline_button(
             )
         case "add_review":
             return types.InlineKeyboardButton(
-                text="send a message to add/modify a review",
+                text=(
+                    "📩 send a message below to\n"
+                    "add/modify a review for this order"
+                ),
                 callback_data="add_review",
             )
         case _:
