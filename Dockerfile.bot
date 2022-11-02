@@ -39,9 +39,7 @@ RUN curl -sSL https://install.python-poetry.org | python3 -
 RUN export PATH="/home/vscode/.local/bin:$PATH"
 
 COPY deliverybot/ deliverybot/deliverybot
-COPY scripts/ deliverybot/scripts
 COPY pyproject.toml deliverybot
-COPY poetry.lock deliverybot
 COPY README.md deliverybot
 
 USER root

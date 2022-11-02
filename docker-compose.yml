@@ -21,7 +21,7 @@ services:
       context: .
       dockerfile: Dockerfile.server
     container_name: server
-    command: /home/vscode/.local/bin/poetry run flask --app deliverybot/server/app.py run --host=0.0.0.0
+    command: /home/vscode/.local/bin/poetry run gunicorn --bind 0.0.0.0:5000 deliverybot.server.app:app
     volumes:
       - ./deliverybot/server:/home/vscode/deliverybot/deliverybot/server
     ports:
