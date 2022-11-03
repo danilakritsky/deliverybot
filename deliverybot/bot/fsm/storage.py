@@ -26,12 +26,14 @@ class SQLiteStorage(BaseStorage):
 
         async with async_session() as session:
             async with session.begin():
+                session.expire_all()
                 user_state = await get_user_state(
                     bot_id=key.bot_id,
                     chat_id=key.chat_id,
                     user_id=key.user_id,
                     session=session,
                 )
+
                 user = await get_user(
                     bot_id=key.bot_id,
                     chat_id=key.chat_id,

@@ -39,7 +39,11 @@ class UserState(Base):
     message_id = Column(Integer)
 
     user_id = Column(Integer, ForeignKey("users.id"))
-    user = relationship("User", uselist=False)
+    user = relationship(
+        "User",
+        uselist=False,
+        single_parent=True,
+    )
 
     current_order_id = Column(Integer, ForeignKey("orders.id"))
     current_order = relationship(
@@ -72,6 +76,7 @@ class User(Base):
     def __repr__(self):
         return (
             "<User"
+            + f" id={self.id}"
             + f" bot_id={self.bot_id} chat_id={self.chat_id}"
             + f" user_id={self.user_id}>"
         )

@@ -36,12 +36,14 @@ async def show_order_history(
                     type="article",
                     id=order.id,
                     title=(
+                        f"Order #{order.id}\n"
+                        " - "
                         f"Date: {order.datetime:%Y-%m-%d %H:%M:%S}\n"
                         " - "
                         f"Total: {order.order_total}"
                     ),
                     description=await make_order_summary(
-                        order, session, use_html=False
+                        order, session, use_html=False, inline=True
                     ),
                     input_message_content=types.InputTextMessageContent(
                         message_text=f"{order.id} selected",

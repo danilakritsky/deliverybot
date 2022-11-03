@@ -15,7 +15,7 @@ async def main():
     dp: Dispatcher = Dispatcher(
         storage=SQLiteStorage()
     )  # NOTE: storage is set here
-    dp.update.outer_middleware(UpdatePrinterOuter())
+    # dp.update.outer_middleware(UpdatePrinterOuter())
     dp.include_router(routers.info_router.router)
     dp.include_router(routers.menu_router.router)
     dp.include_router(routers.cart_router.router)

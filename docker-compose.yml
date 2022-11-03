@@ -13,7 +13,7 @@ services:
     depends_on:
       - server
     volumes:
-      - ./deliverybot/bot:/home/vscode/deliverybot/deliverybot/bot
+      - ./deliverybot:/home/vscode/deliverybot/deliverybot
     tty: true  # persist (should use 'sh' as entrypoint)
 
   server:

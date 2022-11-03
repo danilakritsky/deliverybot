@@ -42,18 +42,40 @@ async def get_section_items(
 
 async def get_user_state(
     bot_id: int, chat_id: int, user_id: int, session: AsyncSession
-) -> Order:
-    print(bot_id, chat_id, user_id)
+) -> UserState:
     stmt = (
         select(UserState)
         .options(
-            selectinload(UserState.user), selectinload(UserState.current_order)
+            # https://docs.sqlalchemy.org/en/14/tutorial/orm_related_objects.html#augmenting-loader-strategy-paths
+            selectinload(UserState.user.and_(
+                User.bot_id == bot_id,
+                User.chat_id == chat_id,
+                User.user_id == user_id)
+            ),
+            selectinload(UserState.current_order)
         )
-        .where(User.bot_id == bot_id)
-        .where(User.chat_id == chat_id)
-        .where(User.user_id == user_id)
     )
-    return await run_select_stmt(stmt, session)
+    # selectinload loads data separately
+    # (where does not affect the original query)
+    # so we must filter our results
+    states = await run_select_stmt(stmt, session)
+    if states is None:
+        return None
+    check_state = (
+        lambda state: state.user.bot_id == bot_id
+        and state.user.chat_id == chat_id
+        and state.user.user_id == user_id
+    )
+    if isinstance(states, UserState):
+        if states.user is None:
+            return None
+        return states if check_state(states) else None
+
+    return [
+        state for state in states
+        if state.user is not None
+        and check_state(state)
+    ][0]
 
 
 async def get_user(

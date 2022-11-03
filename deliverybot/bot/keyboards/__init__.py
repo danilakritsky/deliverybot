@@ -143,7 +143,6 @@ async def build_inline_keyboard(
     shape: tuple[int, ...] | int | None = None,
 ) -> types.InlineKeyboardMarkup:
     builder: InlineKeyboardBuilder = InlineKeyboardBuilder()
-    print(buttons)
     builder.add(*buttons)
     if shape:
         if isinstance(shape, tuple):

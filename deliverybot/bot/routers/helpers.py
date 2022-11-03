@@ -18,11 +18,18 @@ async def make_item_description(menu_item: MenuItem) -> str:
     )
 
 
-async def make_order_summary(order, session, use_html: bool = True) -> str:
+async def make_order_summary(
+    order, session, use_html: bool = True, inline: bool = False
+) -> str:
     total: int = 0
     line: OrderLine
-    summary: str = ""
     order = await helpers.get_order_by_id(order.id, session)
+    summary: str = (
+        f'Order #{order.id}\n'
+        + (str(order.datetime) + '\n' if order.datetime else "")
+        + '\n'
+    ) if not inline else ''
+
     for num, line in enumerate(order.order_lines, start=1):
         order_line: OrderLine = await helpers.get_order_line_by_id(
             line.id, session
